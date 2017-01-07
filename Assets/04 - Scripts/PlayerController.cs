@@ -201,7 +201,6 @@ public class PlayerController : MonoBehaviour {
 
     IEnumerator TurnRight()
     {
-        Debug.Log("Fuck");
         if (distanceInTurn == 0f) StopCoroutine("TurnPlayer");
         if (targetAngle == 0) targetAngle = 360;
         isPerformingAttack = true;

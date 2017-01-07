@@ -9,6 +9,24 @@ public class MapGenerator : MonoBehaviour {
 
     public int iterations = 5;
 
+    List<Module> instantiedModules = new List<Module>();
+    Module moduleVerifier;
+    Module lastModule;
+    Transform generatedMap;
+
+    private static MapGenerator instance;
+    public static MapGenerator GetInstance() { return instance; }
+
+    private void Awake()
+    {
+        instance = this;
+    }
+
+    private void Start()
+    {
+        GenerateMap();
+    }
+
     public void GenerateMap()
     {
         //Create map holder and first module
@@ -16,31 +34,50 @@ public class MapGenerator : MonoBehaviour {
         if (transform.FindChild(holderName) != null)
             DestroyImmediate(transform.FindChild(holderName).gameObject);
 
-        Transform generatedMap = new GameObject(holderName).transform;
+        generatedMap = new GameObject(holderName).transform;
         generatedMap.parent = transform;
 
         Module startingModule = (Module) Instantiate(startModule, transform.position, transform.rotation);
         startingModule.transform.parent = generatedMap;
 
         //
+        instantiedModules.Clear();
+        instantiedModules.Add(startingModule);
+        moduleVerifier = startingModule;
         startingModule.GenerateObstacles(this);
-        List<Connection> pendingConnections = startingModule.GetEntranceAndExit();
-        pendingConnections.RemoveAll(c => (c is Entrance));//Don't connect to the entrance of the first module
+        GeneratePath();
+    }
 
-        Module currentModule = startingModule;
+    public void GeneratePath()
+    {
+        while (instantiedModules.Count > 3)
+        {
+            Destroy(instantiedModules[0].gameObject);
+            instantiedModules.RemoveAt(0);
+        }
+
+        moduleVerifier.playerEnterVerifier.SetActive(false);
+
+        List<Connection> pendingConnections = instantiedModules[instantiedModules.Count - 1].GetEntranceAndExit();
+        pendingConnections.RemoveAll(c => (c is Entrance));//Don't connect to the entrance of the first module
 
         for (int i = 0; i < iterations; i++)
         {
             List<Connection> newConnections = new List<Connection>();
 
-            foreach(Connection connection in pendingConnections)
+            foreach (Connection connection in pendingConnections)
             {
-                //Get a random tag of a object this connection can connect to
+                //Generate a module and it's obstacles
                 Module newModule = GenerateModule(connection);
-                newModule.GenerateObstacles(this);//Generate all obstacles in this Module
+                newModule.GenerateObstacles(this);
+                if (i < 0.6 * iterations) moduleVerifier = newModule;
+                instantiedModules.Add(newModule);
+
+                //Get entrance and exits and match
                 List<Connection> newModuleConnections = newModule.GetEntranceAndExit();
                 Connection connectionToMatch = GetConnection(newModuleConnections);
                 MatchConnections(connection, connectionToMatch);
+
                 newConnections.AddRange(newModuleConnections.FindAll(c => c != connectionToMatch));
                 newModule.transform.parent = generatedMap;
             }
@@ -48,8 +85,8 @@ public class MapGenerator : MonoBehaviour {
             pendingConnections = newConnections;
         }
 
-        Module[] instantiatedModules = generatedMap.GetComponentsInChildren<Module>();
-        Debug.Log(instantiatedModules.Length);
+        moduleVerifier.playerEnterVerifier.SetActive(true);
+        Debug.Log(moduleVerifier.name + ", " + moduleVerifier.name);
     }
 
     public Module GenerateModule(Connection connection)
@@ -59,13 +96,17 @@ public class MapGenerator : MonoBehaviour {
         return Instantiate(newModulePrefab);
     }
 
-    //Returns a random connection from a list of connections, priority is default connection always
+    //Returns a random connection from a list of connections, priority to entrance, then default connection
     private Connection GetConnection(List<Connection> connections)
     {
-        Connection defaultConnection = connections.Find(c => c.isDefaultConnection);
-
-        if (defaultConnection) return defaultConnection;
-        else return connections[Random.Range(0, connections.Count)];
+        Connection entrance = connections.Find(c => c is Entrance);
+        if (entrance) return entrance;
+        else
+        {
+            Connection defaultConnection = connections.Find(c => c.isDefaultConnection);
+            if (defaultConnection) return defaultConnection;
+            else return connections[Random.Range(0, connections.Count)];
+        }
     }
 
     public void MatchConnections(Connection oldExit, Connection newExit)

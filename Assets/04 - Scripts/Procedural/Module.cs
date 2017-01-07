@@ -6,6 +6,8 @@ public class Module : MonoBehaviour {
 
     public string Tag;
 
+    public GameObject playerEnterVerifier;
+
     public List<Connection> GetConnections()
     {
         return new List<Connection>(GetComponentsInChildren<Connection>());

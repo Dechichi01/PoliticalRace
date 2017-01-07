@@ -29,7 +29,7 @@ public class Player : MonoBehaviour {
     private SwipeControls swipeLogic;
     private CameraController cameraController;
 
-    /**Private variables*/
+    /**Colliders*/
     private Vector3 FCSizeRun, FCCenterRun;
     private Vector3 FCSizeSlide, FCCenterSlide;
     private Vector3 SCSizeRun, SCCenterRun;
