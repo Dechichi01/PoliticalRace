@@ -23,58 +23,52 @@ public class MapGenerator : MonoBehaviour {
         startingModule.transform.parent = generatedMap;
 
         //
-        List<Exit> pendingExits = startingModule.GetExits();
-        pendingExits.Remove(pendingExits.Find(e => e.name == "Enter"));//Don't connect in the start of the first module
+        startingModule.GenerateObstacles(this);
+        List<Connection> pendingConnections = startingModule.GetEntranceAndExit();
+        pendingConnections.RemoveAll(c => (c is Entrance));//Don't connect to the entrance of the first module
 
         Module currentModule = startingModule;
 
         for (int i = 0; i < iterations; i++)
         {
-            List<Exit> newExits = new List<Exit>();
+            List<Connection> newConnections = new List<Connection>();
 
-            foreach(Exit exit in pendingExits)
+            foreach(Connection connection in pendingConnections)
             {
                 //Get a random tag of a object this connection can connect to
-                string newTag = exit.GetRandomConnectTag();
-                Module newModulePrefab = GetRandomWithTag(modules, newTag);
-                Module newModule = Instantiate(newModulePrefab);
-                List<Exit> newModuleExits = newModule.GetExits();
-                Exit exitToMatch = GetAppropriateExit(newModuleExits);
-                MatchExits(exit, exitToMatch);
-                newExits.AddRange(newModuleExits.FindAll(e => e != exitToMatch));
-
+                Module newModule = GenerateModule(connection);
+                newModule.GenerateObstacles(this);//Generate all obstacles in this Module
+                List<Connection> newModuleConnections = newModule.GetEntranceAndExit();
+                Connection connectionToMatch = GetConnection(newModuleConnections);
+                MatchConnections(connection, connectionToMatch);
+                newConnections.AddRange(newModuleConnections.FindAll(c => c != connectionToMatch));
                 newModule.transform.parent = generatedMap;
             }
 
-            pendingExits = newExits;
+            pendingConnections = newConnections;
         }
 
         Module[] instantiatedModules = generatedMap.GetComponentsInChildren<Module>();
         Debug.Log(instantiatedModules.Length);
     }
 
-    /*
-     * Get a connection from a module, always returns the ENTER connection first     
-    */
-    private Exit GetAppropriateExit(List<Exit> exits)
+    public Module GenerateModule(Connection connection)
     {
-        Exit enter = exits.Find(e => e.name == "Enter");
-        if (enter) return enter;
-
-        Exit exit = exits[Random.Range(0, exits.Count)];
-        for (int i = 0; i < exits.Count; i++)
-        {
-            if (exits[i].isDefaultConnection)
-            {
-                exit = exits[i];
-                break;
-            }
-        }
-
-        return exit;
+        string newTag = connection.GetRandomConnectTag();
+        Module newModulePrefab = GetRandomWithTag(modules, newTag);
+        return Instantiate(newModulePrefab);
     }
 
-    private void MatchExits(Exit oldExit, Exit newExit)
+    //Returns a random connection from a list of connections, priority is default connection always
+    private Connection GetConnection(List<Connection> connections)
+    {
+        Connection defaultConnection = connections.Find(c => c.isDefaultConnection);
+
+        if (defaultConnection) return defaultConnection;
+        else return connections[Random.Range(0, connections.Count)];
+    }
+
+    public void MatchConnections(Connection oldExit, Connection newExit)
     {
         Transform newModule = newExit.transform.root;
         Vector3 forwardVectorToMatch = -oldExit.transform.forward;

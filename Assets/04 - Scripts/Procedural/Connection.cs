@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Exit : MonoBehaviour {
+public class Connection : MonoBehaviour {
 
     public bool isConnected = false;
     public bool isDefaultConnection;
@@ -12,7 +12,7 @@ public class Exit : MonoBehaviour {
         return connectTags[Random.Range(0, connectTags.Length)];
     }
 
-    void OnDrawGizmos()
+    protected void OnDrawGizmos()
     {
         var scale = 5.0f;
 
