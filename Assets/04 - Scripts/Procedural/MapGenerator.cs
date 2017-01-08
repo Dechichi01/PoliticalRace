@@ -8,7 +8,9 @@ public class MapGenerator : MonoBehaviour {
     //Assigned in the inspector
     public Module[] obstacles;
     public int iterations = 5;
+    public int seed;
 
+    System.Random prng;
     //Controlled by GameManager
     Module[] modules;
     Queue<Module> shuffledModules;
@@ -34,6 +36,7 @@ public class MapGenerator : MonoBehaviour {
 
     public void GenerateMap()
     {
+        prng = new System.Random(seed);
         modules = FindObjectOfType<GameManager>().modulesWarmUp;
         ResetShuffledModulesQueue();
 
@@ -135,7 +138,7 @@ public class MapGenerator : MonoBehaviour {
         {
             Connection defaultConnection = connections.Find(c => c.isDefaultConnection);
             if (defaultConnection) return defaultConnection;
-            else return connections[Random.Range(0, connections.Count)];
+            else return connections[prng.Next(0, connections.Count)];
         }
     }
 
@@ -157,7 +160,7 @@ public class MapGenerator : MonoBehaviour {
             if (modules[i].Tag == tagToMatch)
                 matchingModules.Add(modules[i]);            
         }
-        return matchingModules[Random.Range(0, matchingModules.Count)];
+        return matchingModules[prng.Next(0, matchingModules.Count)];
     }
 
     private static float Azimuth(Vector3 vector)

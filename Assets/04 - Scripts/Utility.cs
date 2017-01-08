@@ -8,8 +8,11 @@ namespace Utility
         //Returns a shuffled array (can be used to avoid repetition)
         public static T[] ShuffledArray<T>(T[] array, int seed)
         {
-            System.Random prng = new System.Random(seed);
+            return ShuffledArray(array, new System.Random(seed));
+        }
 
+        public static T[] ShuffledArray<T>(T[] array, System.Random prng)
+        {
             for (int i = 0; i < array.Length; i++)
             {
                 int randomIndex = prng.Next(i, array.Length);
