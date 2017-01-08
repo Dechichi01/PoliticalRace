@@ -12,6 +12,7 @@ public class Module : MonoBehaviour {
     {
         return new List<Connection>(GetComponentsInChildren<Connection>());
     }
+
     public List<Connection> GetObstacleConnections()
     {
         List<Connection> connections = new List<Connection>(GetComponentsInChildren<Connection>());
@@ -33,7 +34,7 @@ public class Module : MonoBehaviour {
         foreach(Connection connection in obstacleConnections)
         {
             //Get a random tag of a object this connection can connect to
-            Module newModule = mapGen.GenerateModule(connection);
+            Module newModule = mapGen.GenerateObstacle(connection);
             List<Connection> newModuleConnections = newModule.GetConnections();
             mapGen.MatchConnections(connection, newModuleConnections[0]);
             newModule.transform.parent = transform;

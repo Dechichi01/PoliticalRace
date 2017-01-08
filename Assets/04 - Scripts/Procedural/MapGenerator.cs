@@ -1,19 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Utility;
 using System.Collections.Generic;
 
 public class MapGenerator : MonoBehaviour {
 
-    public Module[] modules;
-    public Module startModule;
-
+    //Assigned in the inspector
+    public Module[] obstacles;
     public int iterations = 5;
 
-    List<Module> instantiedModules = new List<Module>();
-    Module moduleVerifier;
-    Module lastModule;
-    Transform generatedMap;
+    //Controlled by GameManager
+    Module[] modules;
+    Queue<Module> shuffledModules;
 
+    List<Module> instantiedModules = new List<Module>();//used to get the last module and delete previous when in Game
+    Module moduleVerifier;//module that will trigger new instantiations when player passes on
+    Module lastModule;
+    Transform generatedMap;//Holder for the path created
+
+    //Singleton
     private static MapGenerator instance;
     public static MapGenerator GetInstance() { return instance; }
 
@@ -24,11 +29,14 @@ public class MapGenerator : MonoBehaviour {
 
     private void Start()
     {
-        GenerateMap();
+        //GenerateMap();
     }
 
     public void GenerateMap()
     {
+        modules = FindObjectOfType<GameManager>().modulesWarmUp;
+        ResetShuffledModulesQueue();
+
         //Create map holder and first module
         string holderName = "Generated Map";
         if (transform.FindChild(holderName) != null)
@@ -37,10 +45,9 @@ public class MapGenerator : MonoBehaviour {
         generatedMap = new GameObject(holderName).transform;
         generatedMap.parent = transform;
 
-        Module startingModule = (Module) Instantiate(startModule, transform.position, transform.rotation);
+        Module startingModule = (Module) Instantiate(modules[0], transform.position, transform.rotation);
         startingModule.transform.parent = generatedMap;
 
-        //
         instantiedModules.Clear();
         instantiedModules.Add(startingModule);
         moduleVerifier = startingModule;
@@ -48,13 +55,16 @@ public class MapGenerator : MonoBehaviour {
         GeneratePath();
     }
 
-    public void GeneratePath()
-    {
-        while (instantiedModules.Count > 3)
+    public void GeneratePath(bool setup = false)
+    {       
+        if (!setup)
         {
-            Destroy(instantiedModules[0].gameObject);
-            instantiedModules.RemoveAt(0);
-        }
+            while (instantiedModules.Count > 3)
+            {
+                Destroy(instantiedModules[0].gameObject);
+                instantiedModules.RemoveAt(0);
+            }
+        } 
 
         moduleVerifier.playerEnterVerifier.SetActive(false);
 
@@ -69,6 +79,7 @@ public class MapGenerator : MonoBehaviour {
             {
                 //Generate a module and it's obstacles
                 Module newModule = GenerateModule(connection);
+                Debug.Log("Pas");
                 newModule.GenerateObstacles(this);
                 if (i < 0.6 * iterations) moduleVerifier = newModule;
                 instantiedModules.Add(newModule);
@@ -86,13 +97,32 @@ public class MapGenerator : MonoBehaviour {
         }
 
         moduleVerifier.playerEnterVerifier.SetActive(true);
-        Debug.Log(moduleVerifier.name + ", " + moduleVerifier.name);
+    }
+
+    public void SetModulesArray(Module[] newModules)
+    {
+        modules = newModules;
+        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, (int)Time.time));
+    }
+
+    void ResetShuffledModulesQueue()
+    {
+        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, (int)Time.time));
+    }
+
+    public Module GenerateObstacle(Connection connection)
+    {
+        string newTag = connection.GetRandomConnectTag();
+        Module newModulePrefab = GetRandomWithTag(obstacles, newTag);
+        return Instantiate(newModulePrefab);
     }
 
     public Module GenerateModule(Connection connection)
     {
-        string newTag = connection.GetRandomConnectTag();
-        Module newModulePrefab = GetRandomWithTag(modules, newTag);
+        if (Application.isPlaying) GameManager.GetInstance().CheckForRestBlock();
+
+        if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
+        Module newModulePrefab = shuffledModules.Dequeue();
         return Instantiate(newModulePrefab);
     }
 

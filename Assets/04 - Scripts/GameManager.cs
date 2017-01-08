@@ -1,0 +1,91 @@
+﻿using UnityEngine;
+using Utility;
+using System.Collections.Generic;
+using System.Collections;
+
+public class GameManager : MonoBehaviour {
+
+    public Module[] modulesWarmUp;
+    public Module[] modulesCalibrate;
+    public Module[] modulesReward;
+    public Module[] modulesChallenges;
+    public Module[] modulesRest;
+
+    [Range(0, 1)]
+    public float restProbability = 0.1f;
+    public int numberOfRestBlocks = 2;
+
+    PRD restPRD;
+    int restBlocksCounter = 0;
+
+    public GameState gameState = GameState.Setup;
+
+    MapGenerator mapGen;
+
+    //Singleton
+    public static GameManager instance;
+    public static GameManager GetInstance() { return instance; }
+
+    private void Awake()
+    {
+        instance = this;
+        restPRD = new PRD(restProbability);
+    }
+
+    private void Start()
+    {
+        mapGen = MapGenerator.GetInstance();
+        GenerateStartingPath();
+    }
+
+    void GenerateStartingPath()
+    {
+        mapGen.iterations = 1;
+        mapGen.SetModulesArray(modulesWarmUp);
+
+        mapGen.GenerateMap();
+
+        mapGen.iterations = 3;
+        mapGen.SetModulesArray(modulesCalibrate);
+
+        mapGen.GeneratePath(true);
+
+        mapGen.SetModulesArray(modulesReward);
+        mapGen.GeneratePath(true);
+
+        mapGen.iterations = 5;
+        mapGen.SetModulesArray(modulesChallenges);
+        mapGen.GeneratePath(true);
+
+        gameState = GameState.Challenges;
+    }
+
+    /*
+    * Randonly change to RestBlocks based on a Pseudo Random Distribution
+    * change back after the number of rest blocks was instantiated
+    */
+    public void CheckForRestBlock()
+    {
+        if (gameState == GameState.Rest)
+        {
+            restBlocksCounter++;
+            if (restBlocksCounter >= numberOfRestBlocks)
+            {
+                restBlocksCounter = 0;
+                gameState = GameState.Challenges;
+                mapGen.SetModulesArray(modulesChallenges);
+            }
+        }
+        else if (gameState == GameState.Challenges && restPRD.GetProbability() > Random.value)
+        {
+            restPRD.ResetTries();
+            mapGen.SetModulesArray(modulesRest);
+            gameState = GameState.Rest;
+        }
+    }
+
+    public enum GameState
+    {
+        Setup, Challenges, Rest
+    }
+}
