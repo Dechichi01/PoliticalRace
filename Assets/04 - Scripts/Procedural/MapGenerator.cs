@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class MapGenerator : MonoBehaviour {
 
     //Assigned in the inspector
+    public Module startModule;
     public Module[] obstacles;
     public int iterations = 5;
     public int seed;
@@ -27,6 +28,7 @@ public class MapGenerator : MonoBehaviour {
     private void Awake()
     {
         instance = this;
+        prng = new System.Random(seed);
     }
 
     private void Start()
@@ -48,7 +50,7 @@ public class MapGenerator : MonoBehaviour {
         generatedMap = new GameObject(holderName).transform;
         generatedMap.parent = transform;
 
-        Module startingModule = (Module) Instantiate(modules[0], transform.position, transform.rotation);
+        Module startingModule = (Module) Instantiate(startModule, transform.position, transform.rotation);
         startingModule.transform.parent = generatedMap;
 
         instantiedModules.Clear();
@@ -105,12 +107,12 @@ public class MapGenerator : MonoBehaviour {
     public void SetModulesArray(Module[] newModules)
     {
         modules = newModules;
-        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, (int)Time.time));
+        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, prng));
     }
 
     void ResetShuffledModulesQueue()
     {
-        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, (int)Time.time));
+        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, prng));
     }
 
     public Module GenerateObstacle(Connection connection)
@@ -160,7 +162,7 @@ public class MapGenerator : MonoBehaviour {
             if (modules[i].Tag == tagToMatch)
                 matchingModules.Add(modules[i]);            
         }
-        return matchingModules[prng.Next(0, matchingModules.Count)];
+        return matchingModules[Random.Range(0, matchingModules.Count)];
     }
 
     private static float Azimuth(Vector3 vector)
