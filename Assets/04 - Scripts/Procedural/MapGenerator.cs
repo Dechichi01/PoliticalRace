@@ -84,8 +84,6 @@ public class MapGenerator : MonoBehaviour {
             {
                 //Generate a module and it's obstacles
                 PathModule newModule = GenerateModule(connection);
-                Debug.Log("Pas");
-                newModule.GenerateObstacles(this);
                 if (i < 0.6 * iterations) moduleVerifier = newModule;
                 instantiedModules.Add(newModule);
 
@@ -93,6 +91,8 @@ public class MapGenerator : MonoBehaviour {
                 List<Connection> newModuleConnections = newModule.GetEntranceAndExit();
                 Connection connectionToMatch = GetConnection(newModuleConnections);
                 MatchConnections(connection, connectionToMatch);
+
+                newModule.GenerateObstacles(this);
 
                 newConnections.AddRange(newModuleConnections.FindAll(c => c != connectionToMatch));
                 newModule.transform.parent = generatedMap;
@@ -146,16 +146,12 @@ public class MapGenerator : MonoBehaviour {
 
     public void MatchConnections(Connection oldExit, Connection newExit)
     {
-        MatchConnections(oldExit.transform, newExit.transform);
-    }
-
-    public void MatchConnections(Transform oldExit, Transform newExit)
-    {
-        Transform newModule = newExit.root;
-        Vector3 forwardVectorToMatch = -oldExit.forward;
-        float angleToRotate = Azimuth(forwardVectorToMatch) - Azimuth(newExit.forward);
-        newModule.RotateAround(newExit.position, Vector3.up, angleToRotate);
-        Vector3 translation = oldExit.position - newExit.position;
+        Transform newModule = newExit.transform.root;
+        Vector3 forwardVectorToMatch = -oldExit.transform.forward;
+        float angleToRotate = Azimuth(forwardVectorToMatch) - Azimuth(newExit.transform.forward);
+        Debug.Log(newModule.name + ", " + oldExit.name);
+        newModule.RotateAround(newExit.transform.position, Vector3.up, angleToRotate);
+        Vector3 translation = oldExit.transform.position - newExit.transform.position;
         newModule.position += translation;
     }
 

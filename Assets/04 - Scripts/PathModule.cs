@@ -9,6 +9,9 @@ public class PathModule : Module {
     public GameObject playerEnterVerifier;
     public Connection sideEnviromentConnection;
 
+    public GameObject natureSides;
+    public GameObject roadSides;
+
     Queue<Module> shuffledSideProps;
 
     public List<Connection> GetObstacleConnections()
@@ -38,7 +41,7 @@ public class PathModule : Module {
             newModule.transform.parent = transform;
         }
 
-        //GenerateSideEnviroment(mapGen);
+        GenerateSideEnviroment(mapGen);
     }
 
     void GenerateSideEnviroment(MapGenerator mapGen)
@@ -50,19 +53,31 @@ public class PathModule : Module {
         Vector3 endPos = GetComponentInChildren<Exit>().transform.position;
         endPos.x = startPos.x;
 
-        Vector3 currentPos = startPos;
+        GenerateSideProps(mapGen, startPos, endPos);
 
-        while(currentPos.z < endPos.z)
+        sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
+        
+        startPos.x -= GetComponent<BoxCollider>().bounds.size.x;
+        endPos.x = startPos.x;
+
+        GenerateSideProps(mapGen, startPos, endPos);
+
+        sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
+    }
+
+    void GenerateSideProps(MapGenerator mapGen, Vector3 currentPos, Vector3 endPos)
+    {
+        while (currentPos.z < endPos.z)
         {
-            Debug.Log("D");
             Module currentProp = shuffledSideProps.Dequeue();
             shuffledSideProps.Enqueue(currentProp);
-            if (currentPos.z + currentProp.bc.bounds.size.z > endPos.z) break;
+            if (currentPos.z + currentProp.bc.bounds.size.z * 1.25f > endPos.z) break;
             currentProp = Instantiate(currentProp);
-            currentProp.transform.parent = transform;
-            currentPos.z += currentProp.bc.bounds.extents.z;
+            currentPos.z += currentProp.bc.bounds.size.z * 1.25f;
+            Debug.Log(currentPos.z + ", " + endPos.z);
             sideEnviromentConnection.transform.position = currentPos;
             mapGen.MatchConnections(sideEnviromentConnection, currentProp.GetConnections()[0]);
+            currentProp.transform.parent = transform;
         }
     }
 }
