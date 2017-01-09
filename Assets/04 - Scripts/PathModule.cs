@@ -5,12 +5,15 @@ using System.Collections;
 
 public class PathModule : Module {
 
-    public Module[] sideProps;
     public GameObject playerEnterVerifier;
     public Connection sideEnviromentConnection;
 
-    public GameObject natureSides;
-    public GameObject roadSides;
+    Module[] sideProps;
+    public Module[] natureSideProps, roadSideProps;
+    public GameObject natureSideRight, natureSideLeft;
+    public GameObject roadSideRight, roadSideLeft;
+
+    public bool natureOnRight = false, natureOnLeft = false;
 
     Queue<Module> shuffledSideProps;
 
@@ -46,7 +49,15 @@ public class PathModule : Module {
 
     void GenerateSideEnviroment(MapGenerator mapGen)
     {
-        shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, (int)Time.time));
+        //Enable appropriate sides
+        if (natureOnRight) natureSideRight.SetActive(true);
+        else roadSideRight.SetActive(true);
+        if (natureOnLeft) natureSideLeft.SetActive(true);
+        else roadSideLeft.SetActive(true);
+        //
+
+        sideProps = natureOnRight ? natureSideProps : roadSideProps;
+        shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
         Vector3 startPos = GetComponentInChildren<Entrance>().transform.position;
         startPos.x += GetComponent<BoxCollider>().bounds.extents.x;
@@ -54,6 +65,10 @@ public class PathModule : Module {
         endPos.x = startPos.x;
 
         GenerateSideProps(mapGen, startPos, endPos);
+
+        //Generate left side
+        sideProps = natureOnLeft ? natureSideProps : roadSideProps;
+        shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
         sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
         
@@ -69,15 +84,24 @@ public class PathModule : Module {
     {
         while (currentPos.z < endPos.z)
         {
-            Module currentProp = shuffledSideProps.Dequeue();
-            shuffledSideProps.Enqueue(currentProp);
-            if (currentPos.z + currentProp.bc.bounds.size.z * 1.25f > endPos.z) break;
-            currentProp = Instantiate(currentProp);
-            currentPos.z += currentProp.bc.bounds.size.z * 1.25f;
-            Debug.Log(currentPos.z + ", " + endPos.z);
+            Module currentProp = Instantiate(GetModuleFromQueue());
+            currentPos.z += currentProp.bc.bounds.extents.z * 1.25f;
+            if (currentPos.z + currentProp.bc.bounds.extents.z *1.25f > endPos.z)
+            {
+                DestroyImmediate(currentProp.gameObject);
+                break;
+            }
             sideEnviromentConnection.transform.position = currentPos;
             mapGen.MatchConnections(sideEnviromentConnection, currentProp.GetConnections()[0]);
             currentProp.transform.parent = transform;
+
+            currentPos.z += currentProp.bc.bounds.extents.z*1.25f;
         }
+    }
+
+    Module GetModuleFromQueue()
+    {
+        if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
+        return shuffledSideProps.Dequeue();
     }
 }
