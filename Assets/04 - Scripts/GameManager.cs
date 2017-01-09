@@ -5,11 +5,11 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
-    public Module[] modulesWarmUp;
-    public Module[] modulesCalibrate;
-    public Module[] modulesReward;
-    public Module[] modulesChallenges;
-    public Module[] modulesRest;
+    public PathModule[] modulesWarmUp;
+    public PathModule[] modulesCalibrate;
+    public PathModule[] modulesReward;
+    public PathModule[] modulesChallenges;
+    public PathModule[] modulesRest;
 
     [Range(0, 1)]
     public float restProbability = 0.1f;

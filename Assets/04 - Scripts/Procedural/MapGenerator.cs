@@ -6,19 +6,19 @@ using System.Collections.Generic;
 public class MapGenerator : MonoBehaviour {
 
     //Assigned in the inspector
-    public Module startModule;
+    public PathModule startModule;
     public Module[] obstacles;
     public int iterations = 5;
     public int seed;
 
     System.Random prng;
     //Controlled by GameManager
-    Module[] modules;
-    Queue<Module> shuffledModules;
+    PathModule[] modules;
+    Queue<PathModule> shuffledModules;
 
-    List<Module> instantiedModules = new List<Module>();//used to get the last module and delete previous when in Game
-    Module moduleVerifier;//module that will trigger new instantiations when player passes on
-    Module lastModule;
+    List<PathModule> instantiedModules = new List<PathModule>();//used to get the last module and delete previous when in Game
+    PathModule moduleVerifier;//module that will trigger new instantiations when player passes on
+    PathModule lastModule;
     Transform generatedMap;//Holder for the path created
 
     //Singleton
@@ -50,7 +50,7 @@ public class MapGenerator : MonoBehaviour {
         generatedMap = new GameObject(holderName).transform;
         generatedMap.parent = transform;
 
-        Module startingModule = (Module) Instantiate(startModule, transform.position, transform.rotation);
+        PathModule startingModule = (PathModule) Instantiate(startModule, transform.position, transform.rotation);
         startingModule.transform.parent = generatedMap;
 
         instantiedModules.Clear();
@@ -83,7 +83,7 @@ public class MapGenerator : MonoBehaviour {
             foreach (Connection connection in pendingConnections)
             {
                 //Generate a module and it's obstacles
-                Module newModule = GenerateModule(connection);
+                PathModule newModule = GenerateModule(connection);
                 Debug.Log("Pas");
                 newModule.GenerateObstacles(this);
                 if (i < 0.6 * iterations) moduleVerifier = newModule;
@@ -104,15 +104,15 @@ public class MapGenerator : MonoBehaviour {
         moduleVerifier.playerEnterVerifier.SetActive(true);
     }
 
-    public void SetModulesArray(Module[] newModules)
+    public void SetModulesArray(PathModule[] newModules)
     {
         modules = newModules;
-        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, prng));
+        shuffledModules = new Queue<PathModule>(Randomness.ShuffledArray(modules, prng));
     }
 
     void ResetShuffledModulesQueue()
     {
-        shuffledModules = new Queue<Module>(Randomness.ShuffledArray(modules, prng));
+        shuffledModules = new Queue<PathModule>(Randomness.ShuffledArray(modules, prng));
     }
 
     public Module GenerateObstacle(Connection connection)
@@ -122,12 +122,12 @@ public class MapGenerator : MonoBehaviour {
         return Instantiate(newModulePrefab);
     }
 
-    public Module GenerateModule(Connection connection)
+    public PathModule GenerateModule(Connection connection)
     {
         if (Application.isPlaying) GameManager.GetInstance().CheckForRestBlock();
 
         if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
-        Module newModulePrefab = shuffledModules.Dequeue();
+        PathModule newModulePrefab = shuffledModules.Dequeue();
         return Instantiate(newModulePrefab);
     }
 
@@ -146,12 +146,17 @@ public class MapGenerator : MonoBehaviour {
 
     public void MatchConnections(Connection oldExit, Connection newExit)
     {
-        Transform newModule = newExit.transform.root;
-        Vector3 forwardVectorToMatch = -oldExit.transform.forward;
-        float angleToRotate = Azimuth(forwardVectorToMatch) - Azimuth(newExit.transform.forward);
-        newModule.RotateAround(newExit.transform.position, Vector3.up, angleToRotate);
-        Vector3 translation = oldExit.transform.position - newExit.transform.position;
-        newModule.transform.position += translation;
+        MatchConnections(oldExit.transform, newExit.transform);
+    }
+
+    public void MatchConnections(Transform oldExit, Transform newExit)
+    {
+        Transform newModule = newExit.root;
+        Vector3 forwardVectorToMatch = -oldExit.forward;
+        float angleToRotate = Azimuth(forwardVectorToMatch) - Azimuth(newExit.forward);
+        newModule.RotateAround(newExit.position, Vector3.up, angleToRotate);
+        Vector3 translation = oldExit.position - newExit.position;
+        newModule.position += translation;
     }
 
     private Module GetRandomWithTag(Module[] modules, string tagToMatch)
