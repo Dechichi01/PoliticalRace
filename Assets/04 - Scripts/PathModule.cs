@@ -84,11 +84,11 @@ public class PathModule : Module {
     {
         while (currentPos.z < endPos.z)
         {
-            Module currentProp = Instantiate(GetModuleFromQueue());
+            Module currentProp = GetModuleFromQueue().Instantiate().GetComponent<Module>();
             currentPos.z += currentProp.bc.bounds.extents.z * 1.25f;
             if (currentPos.z + currentProp.bc.bounds.extents.z *1.25f > endPos.z)
             {
-                DestroyImmediate(currentProp.gameObject);
+                currentProp.Destroy();
                 break;
             }
             sideEnviromentConnection.transform.position = currentPos;

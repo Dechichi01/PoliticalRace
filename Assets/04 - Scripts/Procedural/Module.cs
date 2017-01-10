@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Module : MonoBehaviour {
+public class Module : PoolObject {
 
     public string Tag;
     public BoxCollider bc;

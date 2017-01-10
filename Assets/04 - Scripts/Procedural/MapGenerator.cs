@@ -50,7 +50,7 @@ public class MapGenerator : MonoBehaviour {
         generatedMap = new GameObject(holderName).transform;
         generatedMap.parent = transform;
 
-        PathModule startingModule = (PathModule) Instantiate(startModule, transform.position, transform.rotation);
+        PathModule startingModule = startModule.Instantiate(transform.position, transform.rotation).GetComponent<PathModule>();
         startingModule.transform.parent = generatedMap;
 
         instantiedModules.Clear();
@@ -61,15 +61,22 @@ public class MapGenerator : MonoBehaviour {
     }
 
     public void GeneratePath(bool setup = false)
-    {       
+    {
+        //Destroy past modules
+        List<Module> modulesToDeactivate = new List<Module>();  
         if (!setup)
         {
             while (instantiedModules.Count > 3)
             {
-                Destroy(instantiedModules[0].gameObject);
+                modulesToDeactivate.Add(instantiedModules[0]);
+                modulesToDeactivate.AddRange(instantiedModules[0].GetComponentsInChildren<Module>());
                 instantiedModules.RemoveAt(0);
             }
-        } 
+        }
+
+        for (int i = 0; i < modulesToDeactivate.Count; i++)
+            modulesToDeactivate[i].Destroy();
+        //
 
         moduleVerifier.playerEnterVerifier.SetActive(false);
 
@@ -119,7 +126,7 @@ public class MapGenerator : MonoBehaviour {
     {
         string newTag = connection.GetRandomConnectTag();
         Module newModulePrefab = GetRandomWithTag(obstacles, newTag);
-        return Instantiate(newModulePrefab);
+        return newModulePrefab.Instantiate().GetComponent<Module>();
     }
 
     public PathModule GenerateModule(Connection connection)
@@ -128,7 +135,7 @@ public class MapGenerator : MonoBehaviour {
 
         if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
         PathModule newModulePrefab = shuffledModules.Dequeue();
-        return Instantiate(newModulePrefab);
+        return newModulePrefab.Instantiate().GetComponent<PathModule>();
     }
 
     //Returns a random connection from a list of connections, priority to entrance, then default connection
@@ -149,7 +156,6 @@ public class MapGenerator : MonoBehaviour {
         Transform newModule = newExit.transform.root;
         Vector3 forwardVectorToMatch = -oldExit.transform.forward;
         float angleToRotate = Azimuth(forwardVectorToMatch) - Azimuth(newExit.transform.forward);
-        Debug.Log(newModule.name + ", " + oldExit.name);
         newModule.RotateAround(newExit.transform.position, Vector3.up, angleToRotate);
         Vector3 translation = oldExit.transform.position - newExit.transform.position;
         newModule.position += translation;
