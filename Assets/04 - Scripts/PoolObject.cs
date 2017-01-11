@@ -5,6 +5,8 @@ public class PoolObject : MonoBehaviour
 {
     [System.NonSerialized]
     public Transform poolHolder;
+    [System.NonSerialized]
+    public int poolKey;
 
     public GameObject Instantiate(Vector3 position, Quaternion rotation)
     {
@@ -23,16 +25,10 @@ public class PoolObject : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public virtual void Destroy(float delay = 0)
+    public virtual void Destroy()
     {
-        Invoke("Inactivate", delay);
-    }
-
-    private void Inactivate()
-    {
-        transform.parent = poolHolder;
         gameObject.SetActive(false);
+        PoolManager.instance.poolDictionary[poolKey].Enqueue(this);
+        transform.parent = poolHolder;
     }
-
-
 }

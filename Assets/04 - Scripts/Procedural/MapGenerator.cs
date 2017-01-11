@@ -68,7 +68,6 @@ public class MapGenerator : MonoBehaviour {
         {
             while (instantiedModules.Count > 3)
             {
-                modulesToDeactivate.Add(instantiedModules[0]);
                 modulesToDeactivate.AddRange(instantiedModules[0].GetComponentsInChildren<Module>());
                 instantiedModules.RemoveAt(0);
             }
