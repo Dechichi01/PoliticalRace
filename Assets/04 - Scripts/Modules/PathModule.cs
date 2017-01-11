@@ -49,7 +49,7 @@ public class PathModule : Module {
         GenerateSideEnviroment(mapGen);
     }
 
-    void GenerateSideEnviroment(MapGenerator mapGen)
+    protected void GenerateSideEnviroment(MapGenerator mapGen)
     {
         //Enable appropriate sides
         if (natureOnRight) natureSideRight.SetActive(true);

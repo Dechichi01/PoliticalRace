@@ -78,6 +78,17 @@ namespace Utility
             return p;
         }
 
+        public bool CheckOccurrence(float rand)
+        {
+            if (GetProbability() > rand)
+            {
+                ResetTries();
+                return true;
+            }
+            return false;
+        }
+
+
         public void ResetTries() { N = 0; }
 
         public decimal CfromP(decimal p)

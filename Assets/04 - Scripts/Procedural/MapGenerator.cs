@@ -16,6 +16,7 @@ public class MapGenerator : MonoBehaviour {
     PathModule[] modules;
     Queue<PathModule> shuffledModules;
     public bool natureOnLeft = false, natureOnRight = false;
+    PRD prdNatLeft, prdNatRight;
 
     List<PathModule> instantiedModules = new List<PathModule>();//used to get the last module and delete previous when in Game
     PathModule moduleVerifier;//module that will trigger new instantiations when player passes on
@@ -40,6 +41,10 @@ public class MapGenerator : MonoBehaviour {
     public void GenerateMap()
     {
         prng = new System.Random(seed);
+        prdNatLeft = new PRD(.5f);
+        prdNatRight = new PRD(.5f);
+        ChangeSideEnviromentVariables();
+
         modules = FindObjectOfType<GameManager>().modulesWarmUp;
         ResetShuffledModulesQueue();
 
@@ -172,6 +177,12 @@ public class MapGenerator : MonoBehaviour {
                 matchingModules.Add(modules[i]);            
         }
         return matchingModules[Random.Range(0, matchingModules.Count)];
+    }
+
+    private void ChangeSideEnviromentVariables()
+    {
+        natureOnLeft = prdNatLeft.CheckOccurrence(Random.value);
+        natureOnRight = prdNatRight.CheckOccurrence(Random.value);
     }
 
     private static float Azimuth(Vector3 vector)
