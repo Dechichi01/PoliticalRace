@@ -15,6 +15,7 @@ public class MapGenerator : MonoBehaviour {
     //Controlled by GameManager
     PathModule[] modules;
     Queue<PathModule> shuffledModules;
+    public bool natureOnLeft = false, natureOnRight = false;
 
     List<PathModule> instantiedModules = new List<PathModule>();//used to get the last module and delete previous when in Game
     PathModule moduleVerifier;//module that will trigger new instantiations when player passes on
@@ -66,7 +67,7 @@ public class MapGenerator : MonoBehaviour {
         List<Module> modulesToDeactivate = new List<Module>();  
         if (!setup)
         {
-            while (instantiedModules.Count > 3)
+            while (instantiedModules.Count > 4)
             {
                 modulesToDeactivate.AddRange(instantiedModules[0].GetComponentsInChildren<Module>());
                 instantiedModules.RemoveAt(0);
@@ -134,6 +135,8 @@ public class MapGenerator : MonoBehaviour {
 
         if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
         PathModule newModulePrefab = shuffledModules.Dequeue();
+        newModulePrefab.natureOnLeft = natureOnLeft;
+        newModulePrefab.natureOnRight = natureOnRight;
         return newModulePrefab.Instantiate().GetComponent<PathModule>();
     }
 

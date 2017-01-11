@@ -17,18 +17,6 @@ public class PoolManager : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        Debug.Log(poolDictionary[8944].Count);
-        return;
-        List<PoolObject> fuck = new List<PoolObject>(poolDictionary[8944]);
-        Debug.Log(fuck.Count);
-        for (int i = 0; i < fuck.Count; i++)
-        {
-            Debug.Log(fuck[i].name + ", " + fuck[i].gameObject.activeSelf);
-        }
-    }
-
     //Instantiate all objects from prefab and crestes poolHolder to hold them
     public void CreatePool(PoolObject prefab, int poolSize)
     {
@@ -70,7 +58,6 @@ public class PoolManager : MonoBehaviour
                 IncrementPool(prefab, poolKey, transform.FindChild(prefab.name + " Pool"), 2);
 
             PoolObject objectToReuse = poolDictionary[poolKey].Dequeue();
-            if (poolKey == 8944) Debug.Log(poolDictionary.Count);
             objectToReuse.Reuse(position, rotation);
             return objectToReuse.gameObject;
         }

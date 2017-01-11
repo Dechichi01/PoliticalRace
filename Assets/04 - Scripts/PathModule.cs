@@ -13,6 +13,7 @@ public class PathModule : Module {
     public GameObject natureSideRight, natureSideLeft;
     public GameObject roadSideRight, roadSideLeft;
 
+    [HideInInspector]
     public bool natureOnRight = false, natureOnLeft = false;
 
     Queue<Module> shuffledSideProps;
