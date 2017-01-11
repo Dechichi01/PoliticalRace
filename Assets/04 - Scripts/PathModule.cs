@@ -5,8 +5,8 @@ using System.Collections;
 
 public class PathModule : Module {
 
-    public GameObject playerEnterVerifier;
     public Connection sideEnviromentConnection;
+    public PlayerExitVerifier playerExitVerifier;
 
     Module[] sideProps;
     public Module[] natureSideProps, roadSideProps;
@@ -34,6 +34,7 @@ public class PathModule : Module {
 
     public void GenerateObstacles(MapGenerator mapGen)
     {
+        playerExitVerifier.pathModule = this;
         List<Connection> obstacleConnections = GetObstacleConnections();
 
         foreach (Connection connection in obstacleConnections)
@@ -105,4 +106,5 @@ public class PathModule : Module {
         if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
         return shuffledSideProps.Dequeue();
     }
+
 }

@@ -78,7 +78,7 @@ public class MapGenerator : MonoBehaviour {
             modulesToDeactivate[i].Destroy();
         //
 
-        moduleVerifier.playerEnterVerifier.SetActive(false);
+        moduleVerifier.playerExitVerifier.generatePath = false;
 
         List<Connection> pendingConnections = instantiedModules[instantiedModules.Count - 1].GetEntranceAndExit();
         pendingConnections.RemoveAll(c => (c is Entrance));//Don't connect to the entrance of the first module
@@ -108,7 +108,7 @@ public class MapGenerator : MonoBehaviour {
             pendingConnections = newConnections;
         }
 
-        moduleVerifier.playerEnterVerifier.SetActive(true);
+        moduleVerifier.playerExitVerifier.generatePath = true;
     }
 
     public void SetModulesArray(PathModule[] newModules)
