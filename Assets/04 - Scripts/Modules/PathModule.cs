@@ -8,15 +8,17 @@ public class PathModule : Module {
     public Connection sideEnviromentConnection;
     public PlayerExitVerifier playerExitVerifier;
 
-    Module[] sideProps;
-    public Module[] natureSideProps, roadSideProps;
+    public Vector3[] envPoints_R, envPoints_L;
+
+    public SideEnviroment[] natureSideProps, roadSideProps;
     public GameObject natureSideRight, natureSideLeft;
     public GameObject roadSideRight, roadSideLeft;
 
+    SideEnviroment[] sideProps;
+    Queue<SideEnviroment> shuffledSideProps;
+
     [HideInInspector]
     public bool natureOnRight = false, natureOnLeft = false;
-
-    Queue<Module> shuffledSideProps;
 
     public List<Connection> GetObstacleConnections()
     {
@@ -59,52 +61,75 @@ public class PathModule : Module {
         //
 
         sideProps = natureOnRight ? natureSideProps : roadSideProps;
-        shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
+        shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
-        Vector3 startPos = GetComponentInChildren<Entrance>().transform.position;
-        startPos.x += GetComponent<BoxCollider>().bounds.extents.x;
-        Vector3 endPos = GetComponentInChildren<Exit>().transform.position;
-        endPos.x = startPos.x;
-
-        GenerateSideProps(mapGen, startPos, endPos);
+        for (int i = 0; i < envPoints_R.Length - 1; i++)
+        {
+            Vector3 startPos = transform.TransformPoint(envPoints_R[i]);
+            Vector3 endPos = transform.TransformPoint(envPoints_R[i + 1]);
+            Vector3 incrementDir = (endPos - startPos).normalized;
+            sideEnviromentConnection.transform.rotation = Quaternion.LookRotation(Quaternion.Euler(0f, -90f, 0f)*incrementDir);
+            GenerateSideProps(mapGen, startPos, endPos, incrementDir);
+        }
 
         //Generate left side
         sideProps = natureOnLeft ? natureSideProps : roadSideProps;
-        shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
+        shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
         sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
-        
-        startPos.x -= GetComponent<BoxCollider>().bounds.size.x;
-        endPos.x = startPos.x;
 
-        GenerateSideProps(mapGen, startPos, endPos);
+        for(int i = 0; i < envPoints_L.Length - 1; i++)
+        {
+            Vector3 startPos = transform.TransformPoint(envPoints_L[i]);
+            Vector3 endPos = transform.TransformPoint(envPoints_L[i + 1]);
+            Vector3 incrementDir = (endPos - startPos).normalized;
+            sideEnviromentConnection.transform.rotation = Quaternion.LookRotation(Quaternion.Euler(0f, 90f, 0f) * incrementDir);
+            GenerateSideProps(mapGen, startPos, endPos, incrementDir);
+        }
 
         sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
     }
 
-    void GenerateSideProps(MapGenerator mapGen, Vector3 currentPos, Vector3 endPos)
+    void GenerateSideProps(MapGenerator mapGen, Vector3 currentPos, Vector3 endPos, Vector3 incrementDir)
     {
-        while (currentPos.z < endPos.z)
+        while (Vector3.Dot(currentPos,incrementDir) < Vector3.Dot(endPos,incrementDir))
         {
-            Module currentProp = GetModuleFromQueue().Instantiate().GetComponent<Module>();
-            currentPos.z += currentProp.bc.bounds.extents.z * 1.25f;
-            if (currentPos.z + currentProp.bc.bounds.extents.z *1.25f > endPos.z)
-            {
-                currentProp.Destroy();
-                break;
-            }
+            SideEnviroment currentProp = GetModuleFromQueue().Instantiate().GetComponent<SideEnviroment>();
             sideEnviromentConnection.transform.position = currentPos;
             mapGen.MatchConnections(sideEnviromentConnection, currentProp.GetConnections()[0]);
             currentProp.transform.parent = transform;
 
-            currentPos.z += currentProp.bc.bounds.extents.z*1.25f;
+            float increment = Vector3.Dot(currentProp.bc.bounds.size, incrementDir) *
+                (1 + Random.Range(currentProp.minDistFactor, currentProp.maxDistFactor));
+            currentPos += Mathf.Abs(increment) * incrementDir;
         }
     }
 
-    Module GetModuleFromQueue()
+    SideEnviroment GetModuleFromQueue()
     {
-        if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<Module>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
+        if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
         return shuffledSideProps.Dequeue();
     }
 
+    void OnDrawGizmos()
+    {
+        DrawCross(envPoints_R);
+        DrawCross(envPoints_L);
+    }
+
+    private void DrawCross(Vector3[] points)
+    {
+        if (points != null)
+        {
+            Gizmos.color = Color.red;
+            float size = 2f;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                Vector3 globalWaypointPos = points[i] + transform.position;
+                Gizmos.DrawLine(globalWaypointPos - Vector3.forward * size, globalWaypointPos + Vector3.forward * size);
+                Gizmos.DrawLine(globalWaypointPos - Vector3.left * size, globalWaypointPos + Vector3.left * size);
+            }
+        }
+    }
 }
