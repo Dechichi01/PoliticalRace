@@ -43,7 +43,7 @@ public class MapGenerator : MonoBehaviour {
         prng = new System.Random(seed);
         prdNatLeft = new PRD(.5f);
         prdNatRight = new PRD(.5f);
-        ChangeSideEnviromentVariables();
+        RandomChangeSideEnvVariables();
 
         modules = FindObjectOfType<GameManager>().modulesWarmUp;
         ResetShuffledModulesQueue();
@@ -62,6 +62,8 @@ public class MapGenerator : MonoBehaviour {
         instantiedModules.Clear();
         instantiedModules.Add(startingModule);
         moduleVerifier = startingModule;
+        startingModule.natureOnRight = natureOnRight;
+        startingModule.natureOnLeft = natureOnLeft;
         startingModule.GenerateObstacles(this);
         GeneratePath();
     }
@@ -98,6 +100,11 @@ public class MapGenerator : MonoBehaviour {
                 PathModule newModule = GenerateModule(connection);
                 if (i < 0.6 * iterations) moduleVerifier = newModule;
                 instantiedModules.Add(newModule);
+
+                //Random change in side enviroment (road/nature) if module is a turn
+                if (newModule is TurnLeftModule || newModule is TurnRightModule) RandomChangeSideEnvVariables();
+                newModule.natureOnLeft = natureOnLeft;
+                newModule.natureOnRight = natureOnRight;
 
                 //Get entrance and exits and match
                 List<Connection> newModuleConnections = newModule.GetEntranceAndExit();
@@ -140,8 +147,6 @@ public class MapGenerator : MonoBehaviour {
 
         if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
         PathModule newModulePrefab = shuffledModules.Dequeue();
-        newModulePrefab.natureOnLeft = natureOnLeft;
-        newModulePrefab.natureOnRight = natureOnRight;
         return newModulePrefab.Instantiate().GetComponent<PathModule>();
     }
 
@@ -179,7 +184,7 @@ public class MapGenerator : MonoBehaviour {
         return matchingModules[Random.Range(0, matchingModules.Count)];
     }
 
-    private void ChangeSideEnviromentVariables()
+    private void RandomChangeSideEnvVariables()
     {
         natureOnLeft = prdNatLeft.CheckOccurrence(Random.value);
         natureOnRight = prdNatRight.CheckOccurrence(Random.value);

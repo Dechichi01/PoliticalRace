@@ -54,10 +54,10 @@ public class PathModule : Module {
     protected void GenerateSideEnviroment(MapGenerator mapGen)
     {
         //Enable appropriate sides
-        if (natureOnRight) natureSideRight.SetActive(true);
-        else roadSideRight.SetActive(true);
-        if (natureOnLeft) natureSideLeft.SetActive(true);
-        else roadSideLeft.SetActive(true);
+        natureSideRight.SetActive(natureOnRight);
+        natureSideLeft.SetActive(natureOnLeft);
+        roadSideRight.SetActive(!natureOnRight);
+        roadSideLeft.SetActive(!natureOnLeft);
         //
 
         sideProps = natureOnRight ? natureSideProps : roadSideProps;
@@ -90,7 +90,7 @@ public class PathModule : Module {
         sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
     }
 
-    void GenerateSideProps(MapGenerator mapGen, Vector3 currentPos, Vector3 endPos, Vector3 incrementDir)
+    protected void GenerateSideProps(MapGenerator mapGen, Vector3 currentPos, Vector3 endPos, Vector3 incrementDir)
     {
         while (Vector3.Dot(currentPos,incrementDir) < Vector3.Dot(endPos,incrementDir))
         {
@@ -105,19 +105,19 @@ public class PathModule : Module {
         }
     }
 
-    SideEnviroment GetModuleFromQueue()
+    protected SideEnviroment GetModuleFromQueue()
     {
         if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
         return shuffledSideProps.Dequeue();
     }
 
-    void OnDrawGizmos()
+    protected void OnDrawGizmos()
     {
         DrawCross(envPoints_R);
         DrawCross(envPoints_L);
     }
 
-    private void DrawCross(Vector3[] points)
+    protected void DrawCross(Vector3[] points)
     {
         if (points != null)
         {
