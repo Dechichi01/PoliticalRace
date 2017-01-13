@@ -3,6 +3,7 @@ using System.Collections;
 
 public class AngryPeople : MonoBehaviour {
 
+    /*
 	private Camera mainCamera;
 	public GameObject playerGO;
 	private Player player;
@@ -54,5 +55,5 @@ public class AngryPeople : MonoBehaviour {
         {
             gameObject.SetActive(false);
         }
-    }
+    }*/
 }

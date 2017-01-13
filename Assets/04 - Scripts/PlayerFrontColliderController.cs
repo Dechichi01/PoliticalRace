@@ -4,10 +4,11 @@ using System.Collections;
 [RequireComponent (typeof(BoxCollider))]
 public class PlayerFrontColliderController : MonoBehaviour {
 
+    /*
     private LevelManager levelManager;
     private GameController gameController;
     private BoxCollider boxCollider;
-    private Player player;
+    private Character player;
     private PlayerController playerController;
     private PlayerStates playerState;
     private Animation playerAnim;
@@ -20,8 +21,7 @@ public class PlayerFrontColliderController : MonoBehaviour {
         levelManager = FindObjectOfType<LevelManager>();
         boxCollider = GetComponent<BoxCollider>();
         boxCollider.isTrigger = true;
-        GameObject obj = GameObject.Find("Player");
-        player = obj.GetComponent<Player>();
+        player = FindObjectOfType<Character>();
         playerController = obj.GetComponent<PlayerController>();
         playerState = player.playerState;
         gameController = player.GetComponent<GameController>();
@@ -126,5 +126,5 @@ public class PlayerFrontColliderController : MonoBehaviour {
     private void ActivateCollider()
     {
         gameObject.SetActive(true);
-    }
+    }*/
 }

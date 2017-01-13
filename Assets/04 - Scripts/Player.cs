@@ -5,37 +5,20 @@ using System.Collections.Generic;
 [RequireComponent (typeof (PlayerController))]
 [RequireComponent (typeof (PlayerStates))]
 [RequireComponent (typeof (SwipeControls))]
-[RequireComponent (typeof (GameController))]
 public class Player : MonoBehaviour {
-
-    private GameController gameController;
-
-    /**Player related variables*/
-    private PlayerController playerController;
-    private Transform playerT;
-    public Animation playerAnim;
-    private PlayerFrontColliderController frontColliderController;
-    private PlayerSideColliderController sidesColliderController;
-    public BoxCollider frontCollider;
-    public BoxCollider sidesCollider;
-    private const float attackLatency = 0.2f;
-    private float lastAttackTime;
-
-    /**Constant variables*/
-    private float playerHeight = 1.8f; //Height of the player
+    /*
+    
     private float xMovement = 2.4f; //Amount of x movement done when dodging
     public float yGround; //y coordinate to make player "step" on the ground.
     public LayerMask groundMask;
     private SwipeControls swipeLogic;
     private CameraController cameraController;
 
-    /**Colliders*/
     private Vector3 FCSizeRun, FCCenterRun;
     private Vector3 FCSizeSlide, FCCenterSlide;
     private Vector3 SCSizeRun, SCCenterRun;
     private Vector3 SCSizeSlide, SCCenterSlide;
 
-    /**Public variables*/
     public PlayerStates playerState;
     public PlayerPositions targetPositions = new PlayerPositions(); //Set the boundaries for the player movement (6 positions)
     public float targetPosition; //Store the current target position for the player (one of the 6 possibles in the PlayerPositions struct)
@@ -52,8 +35,6 @@ public class Player : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-
-        gameController = GetComponent<GameController>() as GameController;
         playerState = GetComponent<PlayerStates>() as PlayerStates;
         playerState.canPerformActions = true;
         playerController = GetComponent<PlayerController>() as PlayerController;
@@ -66,11 +47,9 @@ public class Player : MonoBehaviour {
         frontCollider = transform.Find("Colliders/FrontCollider").GetComponent<BoxCollider>() as BoxCollider;
         sidesCollider = transform.Find("Colliders/SideColliders").GetComponent<BoxCollider>() as BoxCollider;
 
-        playerAnim = transform.Find("PlayerRotation/PlayerMesh/Prisoner").GetComponent<Animation>() as Animation;
+        anim = GetComponent<Animator>();
 
         swipeLogic = transform.GetComponent<SwipeControls>() as SwipeControls;
-
-        SetAnimationSpeeds();
 
         //FindGround(Vector3.zero);
         yGround = 1;
@@ -87,62 +66,37 @@ public class Player : MonoBehaviour {
 	void Update () {
         playerController.ApplyGravity(ref playerState, actionsQueue, yGround);
 
-        if (gameController.GetGameState() != GameController.GameState.Running) { return; }
-        /*GetInput*/
-        GetActionsBasedOnInput();
+        if (GameController.instance.GetGameState() != GameController.GameState.Running) { return; }
+        ProcessInput();
         ConsumeActionQueue();
 
         playerController.MovePlayerForward(playerState, fwdVelocity);
-        playerController.ExecutePlayerAction(ref playerState, targetPosition, playerAnim);
+        playerController.ExecutePlayerAction(ref playerState, targetPosition, anim);
 
 	}
 
     void FixedUpdate()
     {
-        if (gameController.GetGameState() != GameController.GameState.Running) { return; }
+        if (GameController.instance.GetGameState() != GameController.GameState.Running) { return; }
         FindGround(Vector3.zero);
     }
 
     private void FindGround(Vector3 offset)
     {
-        /*Finding ground*/
         RaycastHit hit;
 
         if (Physics.Raycast(playerT.position + offset, Vector3.down, out hit, 30f, groundMask))
         {
             float potentialYGround = hit.point.y + playerHeight / 2f;
 
-
-            if (Vector3.Angle(hit.normal, Vector3.forward) == 90f)
-            {
-                if (Mathf.Abs(yGround - potentialYGround) > 1f)
-                {
-                    playerAnim.Play("jump");
-                    playerAnim["jump"].time = 0.3f;
-                }
-            }
-            if (playerT.up != hit.normal)
-            {
+            if (playerT.up != hit.normal)//Climbing/Descending slope
                 playerT.forward = Quaternion.Euler(playerT.forward.z*90f, 0f, -playerT.forward.x*90f) * hit.normal;
-            }
 
             if (yGround != potentialYGround)
-            {
                 playerState.isOnAir = true;
-            }
 
             yGround = potentialYGround;
         }
-    }
-
-    private void SetAnimationSpeeds()
-    {
-        /*Set animation speeds*/
-        playerAnim["right"].speed *= dodgeSpeed;
-        playerAnim["left"].speed *= dodgeSpeed;
-        playerAnim["slide"].speed *= 2f; //TODO arrumar isso
-
-        playerController.SetVelocitysBasedOnAnimation(playerAnim, xMovement, jumpHeight, jumpSpeed);
     }
 
     public void ApplyDeath()
@@ -153,26 +107,22 @@ public class Player : MonoBehaviour {
         sidesColliderController.gameObject.SetActive(false);
         playerState.isOnAir = false;
         Invoke("EnableOnAir", 0.3f);
-        playerAnim.Stop();
-        playerAnim.Play("death");
+        anim.Stop();
+        anim.Play("death");
     }
 
     private void EnableOnAir() { playerState.isOnAir = true; } //Just so we can use Invoke
 
-    private void GetActionsBasedOnInput()
+    private void ProcessInput()
     {
         SwipeControls.SwipeDirection direction = swipeLogic.GetSwipeDirection();
 
         if (actionsQueue.Count < 2)
         {
-            if ((Input.GetKeyDown(KeyCode.D) || direction == SwipeControls.SwipeDirection.Right)) //Assures the player can perform the movement
-            {
+            if ((Input.GetKeyDown(KeyCode.D) || direction == SwipeControls.SwipeDirection.Right))
                 actionsQueue.Enqueue(PlayerActions.RIGHT);
-            }
             else if ((Input.GetKeyDown(KeyCode.A) || direction == SwipeControls.SwipeDirection.Left))
-            {
                 actionsQueue.Enqueue(PlayerActions.LEFT);
-            }
             else if ((Input.GetKeyDown(KeyCode.W) || direction == SwipeControls.SwipeDirection.Jump) && playerState.CanJump(playerState.isOnAir))
             {
                 if (playerState.canAttackEnemy && !playerState.isPerformingAttack())
@@ -200,9 +150,8 @@ public class Player : MonoBehaviour {
         }      
     }
 
-    public void ConsumeActionQueue(float animationTime = 0f)
+    public void ConsumeActionQueue()
     {
-        //&& (!playerState.IsExecutingAction() || playerState.isSliding && (Time.time - playerState.startSlideTime) > 0.3f)
         if (actionsQueue.Count > 0)
         {
             if (actionsQueue.first == PlayerActions.SLIDE && playerState.isOnAir) return;
@@ -222,7 +171,7 @@ public class Player : MonoBehaviour {
                     BuildJump();
                     break;
                 case (PlayerActions.SLIDE):
-                    BuildSlide(animationTime);
+                    BuildSlide();
                     break;
                 case (PlayerActions.PUNCH_ATK):
                     if ((Time.time - lastAttackTime) > attackLatency)
@@ -258,8 +207,6 @@ public class Player : MonoBehaviour {
         }
     }
 
-    /**Action Builders**/
-
     public void BuildMoveLeft()
     {
         playerState.ResetActions(true);
@@ -288,13 +235,13 @@ public class Player : MonoBehaviour {
         playerState.ResetActions();
 
         targetPosition = playerT.position.y + jumpHeight;
-        playerAnim.Play("jump");
+        anim.Play("jump");
 
         playerState.isJumping = true;
         playerState.isOnAir = true;
     }
 
-    public void BuildSlide(float animationTime = 0f)
+    public void BuildSlide()
     {
         playerState.ResetActions();
 
@@ -303,9 +250,8 @@ public class Player : MonoBehaviour {
 
         Invoke("SetBoxCollider_Slide", 0.2f);//Wait for the player to get to the ground to change box collider size
 
-        playerAnim.Stop();
-        playerAnim.Play("slide");
-        playerAnim["slide"].time = animationTime;
+        anim.Stop();
+        anim.SetTrigger("slide");
 
         playerState.startSlideTime = Time.time;
 
@@ -349,7 +295,6 @@ public class Player : MonoBehaviour {
     {
         playerState.isSlideAttacking = true;
     }
-    /**End Action Builders**/
 
     private void SetBoxColliders()
     {
@@ -408,7 +353,7 @@ public class Player : MonoBehaviour {
         float timeToFinish = (Voz - Vfz) / res;
         float Vz = Voz;
 
-        playerAnim.Play("jump");
+        anim.Play("jump");
 
         while (playerT.position.y > yGround)
         {
@@ -425,44 +370,11 @@ public class Player : MonoBehaviour {
             }
             playerT.Translate((Vector3.up * Vy + Vector3.forward * Vz) * Time.fixedDeltaTime);
         }
-        gameController.SetGameState(GameController.GameState.Running);
+        GameController.instance.SetGameState(GameController.GameState.Running);
         StopCoroutine("playEntrance");
     }
-
+    */
 }
 
-public enum PlayerActions
-{
-    NONE,
-    RIGHT, LEFT,
-    JUMP, SLIDE,
-    PUNCH_ATK, SLIDE_ATK,
-    UPHILL_ATK, DOWNHILL_ATK
-}
-
-public struct PlayerPositions
-{
-    public float GroundCenter;
-    public float GroundRight;
-    public float GroundLeft;
-
-    public void SetAllPositions(float _GroundCenter, float xMovement, float jumpHeight)
-    {
-        GroundCenter = _GroundCenter;
-        //AirCenter = GroundCenter + jumpHeight;
-        GroundRight = GroundCenter + xMovement;
-        //AirRight = GroundRight + Vector3.up * jumpHeight;
-        GroundLeft = GroundCenter - xMovement;
-        //AirLeft = GroundLeft + Vector3.up * jumpHeight;
-    }
-
-    public override string ToString()
-    {
-        return "PlayerPositions: GroundCenter = " + GroundCenter +
-            ", GroundLeft = " + GroundLeft +
-            ", GroundRight = " + GroundRight;
-    }
-
-}
 
 

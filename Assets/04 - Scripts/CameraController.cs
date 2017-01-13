@@ -3,9 +3,8 @@ using System.Collections;
 
 public class CameraController : MonoBehaviour {
 
-    public GameController gameController;
     private Transform tPlayerMesh;
-    private Player player;
+    private Character player;
 
     private Transform tCamera;
 
@@ -19,13 +18,13 @@ public class CameraController : MonoBehaviour {
     void Start () {
         tCamera = GetComponent<Transform>();
 
-        tPlayerMesh = GameObject.Find("PlayerRotation/PlayerMesh").transform;
-        player = GameObject.Find("Player").GetComponent<Player>();
+        tPlayerMesh = FindObjectOfType<Character>().transform;
+        player = FindObjectOfType<Character>();
         cameraY = tCamera.position.y;
 	}
 	
 	void LateUpdate () {
-        if (gameController.GetGameState() != GameController.GameState.Running) { return; }
+        if (GameController.instance.GetGameState() != GameController.GameState.Running) { return; }
 
         float newPosX = tPlayerMesh.position.x;
         
