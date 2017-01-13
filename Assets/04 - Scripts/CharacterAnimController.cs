@@ -13,15 +13,18 @@ public class CharacterAnimController : MonoBehaviour {
         controller = GetComponent<Controller3D>();
 
     }
+
     public void PerformAction(Vector3 moveAmount, float fwdMovPercent)
     {
         anim.SetFloat("forward", fwdMovPercent);
+        anim.SetBool("isJumping", moveAmount.y > 0);
+        anim.SetBool("onAir", !controller.collisions.below);
         controller.Move(moveAmount);
     }
 
-    public void Jump()
+    public void Slide()
     {
-        anim.SetTrigger("jump");
+        anim.SetTrigger("slide");
     }
 
 }

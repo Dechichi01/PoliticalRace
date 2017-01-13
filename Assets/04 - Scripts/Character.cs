@@ -15,6 +15,7 @@ public class Character : MonoBehaviour {
 
     float targetPosition;
     bool jump = false;
+    bool wantToSlide = false;
 
     private float xMovement = 2.4f; //Amount of x movement done when dodging
     public float dodgeSpeed = 8f;
@@ -118,14 +119,10 @@ public class Character : MonoBehaviour {
                 case (PlayerActions.JUMP):
                     playerState.isSliding = false;
                     jump = true;
-                    playerState.isJumping = true;
-                    playerState.isOnAir = true;
                     break;
                 case (PlayerActions.SLIDE):
-                    if (!playerState.isOnAir)
-                    {
-                        playerState.isSliding = true;
-                    }
+                    wantToSlide = true;
+                    charAnimCtrl.Slide();
                     break;
             }
         }
@@ -167,9 +164,12 @@ public class Character : MonoBehaviour {
 
         if (controller.collisions.below)
         {
-            moveAmount.y = 0f;
+            if (wantToSlide) wantToSlide = false;
+            moveAmount.y = -0.015f;
         }
-        moveAmount.y += gravity * Time.deltaTime * Time.deltaTime;
+
+        float gravityMultiplier = wantToSlide ? 2.5f : 1f;
+        moveAmount.y += gravityMultiplier*gravity * Time.deltaTime * Time.deltaTime;
 
         if (jump && !playerState.isOnAir)
         {
@@ -177,6 +177,15 @@ public class Character : MonoBehaviour {
             moveAmount.y = jumpVelocity * Time.deltaTime;
         }
 
+    }
+
+    IEnumerator CheckForSlide()
+    {
+        while (playerState.isOnAir)
+            yield return null;
+
+        playerState.isSliding = true;
+        charAnimCtrl.Slide();
     }
 
 }
@@ -187,6 +196,7 @@ public class PlayerStates
 {
 
     public bool canPerformActions = true;
+    public bool canJump = true;
 
     //Player states
     public bool isMovingRight, isMovingLeft;
@@ -198,14 +208,35 @@ public class PlayerStates
 
     public bool isOnAir;
 
+    [HideInInspector]
     public bool canAttackEnemy; //Tells if the player is close enough (and not to close) to attack the enemy. It's only set when the player enter the "Enemy Surroundings" trigger (see PlayerFronCollider for more info);
 
-    PlayerPositions targetPositions;
+    private PlayerPositions targetPositions;
+    [HideInInspector]
     public Vector3 previousPosition; //previous position of the player (before moving right or left). Used by PlayerSideColliderController;
 
     public PlayerStates(float groundCenter, float xMovement)
     {
         targetPositions = new PlayerPositions(groundCenter, xMovement);
+    }
+
+    public PlayerStates()
+    {
+
+    }
+
+    public void Copy(PlayerStates states)
+    {
+        canPerformActions = states.canPerformActions;
+        canJump = states.canJump;
+        isMovingRight = states.isMovingRight;
+        isMovingLeft = states.isMovingLeft;
+        isJumping = states.isJumping;
+        isSliding = states.isSliding;
+        isPunchAttacking = states.isPunchAttacking;
+        isSlideAttacking = states.isSlideAttacking;
+        isUpHillAttacking = states.isUpHillAttacking;
+        isDownHillAttacking = states.isDownHillAttacking;
     }
 
     public void ResetActions()

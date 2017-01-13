@@ -16,6 +16,7 @@ public class Controller3D : MonoBehaviour {
         if (moveAmount.y <= 0)
             VerticalCollisions(ref moveAmount);
 
+        Debug.Log(collisions.below);
         transform.Translate(moveAmount);
     }
 
