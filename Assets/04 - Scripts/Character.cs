@@ -13,9 +13,13 @@ public class Character : MonoBehaviour {
     private PlayerSideColliderController sidesColliderController;
     private SwipeControls swipeLogic;
 
+    private Vector3 FCSizeRun, FCCenterRun;
+    private Vector3 FCSizeSlide, FCCenterSlide;
+    private Vector3 SCSizeRun, SCCenterRun;
+    private Vector3 SCSizeSlide, SCCenterSlide;
+
     float targetPosition;
     bool jump = false;
-    bool wantToSlide = false;
 
     private float xMovement = 2.4f; //Amount of x movement done when dodging
     public float dodgeSpeed = 8f;
@@ -41,6 +45,8 @@ public class Character : MonoBehaviour {
         charAnimCtrl = GetComponent<CharacterAnimController>();
         playerState = new PlayerStates(transform.position.x, xMovement);
         swipeLogic = GetComponent<SwipeControls>();
+
+        SetBoxColliders();
 
         gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpApex, 2);
         jumpVelocity = Mathf.Abs(gravity) * timeToJumpApex;
@@ -121,8 +127,8 @@ public class Character : MonoBehaviour {
                     jump = true;
                     break;
                 case (PlayerActions.SLIDE):
-                    wantToSlide = true;
-                    charAnimCtrl.Slide();
+                    StopCoroutine(CheckForSlide());
+                    StartCoroutine(CheckForSlide());
                     break;
             }
         }
@@ -163,13 +169,9 @@ public class Character : MonoBehaviour {
         playerState.isOnAir = !controller.collisions.below;
 
         if (controller.collisions.below)
-        {
-            if (wantToSlide) wantToSlide = false;
             moveAmount.y = -0.015f;
-        }
 
-        float gravityMultiplier = wantToSlide ? 2.5f : 1f;
-        moveAmount.y += gravityMultiplier*gravity * Time.deltaTime * Time.deltaTime;
+        moveAmount.y += gravity * Time.deltaTime * Time.deltaTime;
 
         if (jump && !playerState.isOnAir)
         {
@@ -181,11 +183,46 @@ public class Character : MonoBehaviour {
 
     IEnumerator CheckForSlide()
     {
-        while (playerState.isOnAir)
-            yield return null;
-
-        playerState.isSliding = true;
         charAnimCtrl.Slide();
+        while (playerState.isOnAir)
+        {
+            moveAmount.y += 1.5f*gravity * Time.deltaTime * Time.deltaTime;
+            yield return null;
+        }
+        SetBoxCollider_Slide();
+    }
+
+    private void SetBoxColliders()
+    {
+        FCCenterRun = frontCollider.center;
+        FCSizeRun = frontCollider.size;
+        FCCenterSlide = new Vector3(frontCollider.center.x, 0.5f, frontCollider.center.z);
+        FCSizeSlide = new Vector3(frontCollider.size.x, 0.5f, frontCollider.size.z);
+
+        SCCenterRun = sidesCollider.center;
+        SCSizeRun = sidesCollider.size;
+        SCCenterSlide = new Vector3(sidesCollider.center.x, 0.5f, sidesCollider.center.z);
+        SCSizeSlide = new Vector3(sidesCollider.size.x, 0.5f, sidesCollider.size.z);
+    }
+
+    public void SetBoxCollider_Slide()
+    {
+        frontCollider.size = FCSizeSlide;
+        frontCollider.center = FCCenterSlide;
+
+        sidesCollider.size = SCSizeSlide;
+        sidesCollider.center = SCCenterSlide;
+
+    }
+
+    //This should be called by the Slide animations after it finishes
+    public void SetBoxCollider_Run()
+    {
+        frontCollider.size = FCSizeRun;
+        frontCollider.center = FCCenterRun;
+
+        sidesCollider.size = SCSizeRun;
+        sidesCollider.center = SCCenterRun;
     }
 
 }
