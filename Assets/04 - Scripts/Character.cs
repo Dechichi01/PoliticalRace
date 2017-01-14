@@ -9,6 +9,7 @@ public class Character : MonoBehaviour {
     public PlayerStates playerState;
     private Controller3D controller;
     private CharacterAnimController charAnimCtrl;
+    private WayPointsManager wayPointsManager;
     private PlayerFrontColliderController frontColliderController;
     private PlayerSideColliderController sidesColliderController;
     private SwipeControls swipeLogic;
@@ -38,11 +39,12 @@ public class Character : MonoBehaviour {
     ListQueue<PlayerActions> actionsQueue = new ListQueue<PlayerActions>();
 
     Vector3 moveAmount;
-    
+
     private void Start()
     {
         controller = GetComponent<Controller3D>();
         charAnimCtrl = GetComponent<CharacterAnimController>();
+        wayPointsManager = GetComponent<WayPointsManager>();
         playerState = new PlayerStates(transform.position.x, xMovement);
         swipeLogic = GetComponent<SwipeControls>();
 
@@ -58,7 +60,11 @@ public class Character : MonoBehaviour {
         ConsumeActionQueue();
         ProcessMovement();
 
-        charAnimCtrl.PerformAction(moveAmount, fwdVelocity/maxFwdVelocity);
+        wayPointsManager.speed = fwdVelocity;
+        SimpleTransform simpleTrans = wayPointsManager.GetTranslateAmount(transform);
+        transform.position = simpleTrans.position;
+        transform.forward = simpleTrans.forwardVector;
+        //charAnimCtrl.PerformAction(moveAmount, fwdVelocity/maxFwdVelocity);
     }
 
     private void ProcessInput()
@@ -224,7 +230,6 @@ public class Character : MonoBehaviour {
         sidesCollider.size = SCSizeRun;
         sidesCollider.center = SCCenterRun;
     }
-
 }
 
 

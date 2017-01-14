@@ -12,8 +12,8 @@ public class MapGenerator : MonoBehaviour {
     public int seed;
 
     System.Random prng;
-    //Controlled by GameManager
-    PathModule[] modules;
+
+    PathModule[] modules;//Controlled by GameManager
     Queue<PathModule> shuffledModules;
     public bool natureOnLeft = false, natureOnRight = false;
     PRD prdNatLeft, prdNatRight;
