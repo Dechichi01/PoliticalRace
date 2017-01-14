@@ -9,26 +9,27 @@ public class Controller3D : MonoBehaviour {
 
     public float skinWidth = 0.015f;
 
-    public void Move(Vector3 moveAmount)
+    public float yGround;
+
+    public void Move(float yMoveAmount)
     {
         collisions.Reset();
 
-        if (moveAmount.y <= 0)
-            VerticalCollisions(ref moveAmount);
+        if (yMoveAmount <= 0)
+            VerticalCollisions(ref yMoveAmount);
 
-        Debug.Log(collisions.below);
-        transform.Translate(moveAmount);
+        transform.Translate(Vector3.up*yMoveAmount);
     }
 
-    void VerticalCollisions(ref Vector3 moveAmount)
+    void VerticalCollisions(ref float yMoveAmount)
     {
         RaycastHit hit;
-        Physics.Raycast(transform.position, Vector3.down, .5f, collisionMask);
 
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Abs(moveAmount.y), collisionMask))
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Abs(yMoveAmount), collisionMask))
         {
             collisions.below = true;
-            moveAmount.y = -(hit.distance - skinWidth);
+            yMoveAmount = -(hit.distance - skinWidth);
+            yGround = hit.point.y + skinWidth;
         }
     }
     

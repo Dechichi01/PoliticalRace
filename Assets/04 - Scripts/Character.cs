@@ -19,7 +19,8 @@ public class Character : MonoBehaviour {
     private Vector3 SCSizeRun, SCCenterRun;
     private Vector3 SCSizeSlide, SCCenterSlide;
 
-    float targetPosition;
+    Vector3 centralPathPosition;
+    float targetXDisplacement, xDisplacement = 0f;
     bool jump = false;
 
     private float xMovement = 2.4f; //Amount of x movement done when dodging
@@ -38,7 +39,7 @@ public class Character : MonoBehaviour {
 
     ListQueue<PlayerActions> actionsQueue = new ListQueue<PlayerActions>();
 
-    Vector3 moveAmount;
+    float yMoveAmount;
 
     private void Start()
     {
@@ -52,6 +53,8 @@ public class Character : MonoBehaviour {
 
         gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpApex, 2);
         jumpVelocity = Mathf.Abs(gravity) * timeToJumpApex;
+
+        centralPathPosition = transform.position;
     }
 
     private void Update()
@@ -61,10 +64,12 @@ public class Character : MonoBehaviour {
         ProcessMovement();
 
         wayPointsManager.speed = fwdVelocity;
-        SimpleTransform simpleTrans = wayPointsManager.GetTranslateAmount(transform);
-        transform.position = simpleTrans.position;
+        SimpleTransform simpleTrans = wayPointsManager.GetTranslateAmount(transform, centralPathPosition);
         transform.forward = simpleTrans.forwardVector;
-        //charAnimCtrl.PerformAction(moveAmount, fwdVelocity/maxFwdVelocity);
+        centralPathPosition = simpleTrans.position;
+        centralPathPosition.y = transform.position.y;//NÃO ALTERA ISSO
+        transform.position = centralPathPosition + transform.right * xDisplacement;
+        charAnimCtrl.PerformAction(yMoveAmount, fwdVelocity/maxFwdVelocity);
     }
 
     private void ProcessInput()
@@ -113,18 +118,18 @@ public class Character : MonoBehaviour {
             switch(action)
             {
                 case (PlayerActions.RIGHT):
-                    if (playerState.CanMoveRight(transform, xMovement))
+                    if (playerState.CanMoveRight(xDisplacement, xMovement))
                     {
+                        targetXDisplacement += xMovement;
                         playerState.canPerformActions = false;
-                        targetPosition = Vector3.Dot(transform.position, transform.right) + xMovement;
                         playerState.isMovingRight = true;
                     }
                     break;
                 case (PlayerActions.LEFT):
-                    if (playerState.CanMoveLeft(transform, xMovement))
+                    if (playerState.CanMoveLeft(xDisplacement, xMovement))
                     {
+                        targetXDisplacement -= xMovement;
                         playerState.canPerformActions = false;
-                        targetPosition = Vector3.Dot(transform.position, transform.right) - xMovement;
                         playerState.isMovingLeft = true;
                     }
                     break;
@@ -142,47 +147,37 @@ public class Character : MonoBehaviour {
 
     void ProcessMovement()
     {
-        moveAmount.z = fwdVelocity*Time.deltaTime;
-        moveAmount.x = 0;
-
         //Horizontal movement
         if (playerState.isMovingRight)
         {
-            float lateralMoveAmount = dodgeSpeed * Time.deltaTime;
-            float finalLateralPos = Vector3.Dot(transform.position + Vector3.right * lateralMoveAmount, transform.right);
-            if (finalLateralPos >= targetPosition)
+            xDisplacement += dodgeSpeed * Time.deltaTime;
+            if (xDisplacement > targetXDisplacement)
             {
-                lateralMoveAmount = Mathf.Abs(targetPosition - Vector3.Dot(transform.position, transform.right));
+                xDisplacement = targetXDisplacement;
                 playerState.isMovingRight = false;
                 playerState.canPerformActions = true;
             }
-            moveAmount += Vector3.right * lateralMoveAmount;
         }
         else if (playerState.isMovingLeft)
         {
-            float lateralMoveAmount = dodgeSpeed * Time.deltaTime;
-            float finalLateralPos = Vector3.Dot(transform.position + Vector3.left * lateralMoveAmount, transform.right);
-            if (finalLateralPos <= targetPosition)
+            xDisplacement -= dodgeSpeed * Time.deltaTime;
+            if (xDisplacement < targetXDisplacement)
             {
-                lateralMoveAmount = Mathf.Abs(targetPosition - Vector3.Dot(transform.position, transform.right));
-                playerState.isMovingLeft = false;
+                xDisplacement = targetXDisplacement;
+                playerState.isMovingRight = false;
                 playerState.canPerformActions = true;
             }
-            moveAmount += Vector3.left * lateralMoveAmount;
         }
 
-        //Vertical Movement
+        yMoveAmount += gravity * Time.deltaTime * Time.deltaTime;
+
+        if (controller.collisions.below) yMoveAmount = -0.015f;
         playerState.isOnAir = !controller.collisions.below;
 
-        if (controller.collisions.below)
-            moveAmount.y = -0.015f;
-
-        moveAmount.y += gravity * Time.deltaTime * Time.deltaTime;
-
-        if (jump && !playerState.isOnAir)
+        if (jump)
         {
             jump = false;
-            moveAmount.y = jumpVelocity * Time.deltaTime;
+            yMoveAmount = jumpVelocity * Time.deltaTime;
         }
 
     }
@@ -192,7 +187,7 @@ public class Character : MonoBehaviour {
         charAnimCtrl.Slide();
         while (playerState.isOnAir)
         {
-            moveAmount.y += 1.5f*gravity * Time.deltaTime * Time.deltaTime;
+            yMoveAmount += 1.5f*gravity * Time.deltaTime * Time.deltaTime;
             yield return null;
         }
         SetBoxCollider_Slide();
@@ -306,16 +301,14 @@ public class PlayerStates
         return (isPunchAttacking || isSlideAttacking || isDownHillAttacking || isUpHillAttacking);
     }
 
-    public bool CanMoveRight(Transform playerT, float xMovement)
+    public bool CanMoveRight(float horizontalDisplacement, float xMovement)
     {
-        if (!(Vector3.Dot(playerT.position, playerT.right) + xMovement > targetPositions.GroundRight + 0.2f)) { return true; }
-        return false;
+        return horizontalDisplacement < xMovement;
     }
 
-    public bool CanMoveLeft(Transform playerT, float xMovement)
+    public bool CanMoveLeft(float horizontalDisplacement, float xMovement)
     {
-        if (!(Vector3.Dot(playerT.position, playerT.right) - xMovement < targetPositions.GroundLeft - 0.2f)) { return true; }
-        return false;
+        return horizontalDisplacement > -xMovement;
     }
 
     public bool CanJump()

@@ -19,14 +19,14 @@ public class WayPointsManager : MonoBehaviour
         ChangeWayPointList();
     }
 
-    public SimpleTransform GetTranslateAmount(Transform Tobject)
+    public SimpleTransform GetTranslateAmount(Transform Tobject, Vector3 position)
     {
         SimpleTransform simpleTrans = new SimpleTransform();
         //simpleTrans.forwardVector = Vector3.Lerp(Tobject.forward, targetWayPoint.forward, 1 - Vector3.Distance(Tobject.position, targetWayPoint.position));
-        simpleTrans.forwardVector = Vector3.RotateTowards(Tobject.forward, targetWayPoint.position - Tobject.position, 0.5f * Time.deltaTime, 0.0f);
+        simpleTrans.forwardVector = Vector3.RotateTowards(Tobject.forward, targetWayPoint.position - position, 0.5f * Time.deltaTime, 0.0f);
 
         // move towards the target
-        simpleTrans.position = Vector3.MoveTowards(Tobject.position, targetWayPoint.position, speed * Time.deltaTime);
+        simpleTrans.position = Vector3.MoveTowards(position, targetWayPoint.position, speed * Time.deltaTime);
 
         CheckForArrival(simpleTrans.position);
 
@@ -43,8 +43,6 @@ public class WayPointsManager : MonoBehaviour
             currentWayPoint++;
             targetWayPoint = wayPointList[currentWayPoint];
         }
-
-        Debug.Log(currentWayPoint);
     }
 
     void ChangeWayPointList()

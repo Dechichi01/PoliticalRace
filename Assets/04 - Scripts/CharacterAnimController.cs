@@ -14,12 +14,12 @@ public class CharacterAnimController : MonoBehaviour {
 
     }
 
-    public void PerformAction(Vector3 moveAmount, float fwdMovPercent)
+    public void PerformAction(float yMoveAmount, float fwdMovPercent)
     {
         anim.SetFloat("forward", fwdMovPercent);
-        anim.SetBool("isJumping", moveAmount.y > 0);
+        anim.SetBool("isJumping", yMoveAmount > 0);
         anim.SetBool("onAir", !controller.collisions.below);
-        controller.Move(moveAmount);
+        controller.Move(yMoveAmount);
     }
 
     public void Slide()
