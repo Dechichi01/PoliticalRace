@@ -18,7 +18,10 @@ public class GameManager : MonoBehaviour {
     PRD restPRD;
     int restBlocksCounter = 0;
 
-    public GameState gameState = GameState.Setup;
+    [HideInInspector]
+    public int blocksGeneratedInState = 0;
+
+    public GameState gameState = GameState.WarmUp;
 
     Character player;
     MapGenerator mapGen;
@@ -53,16 +56,18 @@ public class GameManager : MonoBehaviour {
         mapGen.iterations = 3;
         mapGen.SetModulesArray(modulesCalibrate);
 
-        mapGen.GeneratePath(true);
+        mapGen.GeneratePath();
 
         mapGen.SetModulesArray(modulesReward);
-        mapGen.GeneratePath(true);
+        mapGen.GeneratePath();
 
         mapGen.iterations = 5;
         mapGen.SetModulesArray(modulesChallenges);
-        mapGen.GeneratePath(true);
+        mapGen.GeneratePath();
 
         gameState = GameState.Challenges;
+
+        mapGen.iterations = 1;
     }
 
     /*
@@ -96,6 +101,6 @@ public class GameManager : MonoBehaviour {
 
     public enum GameState
     {
-        Setup, Challenges, Rest
+        WarmUp, Calibrate, Reward, Challenges, Rest
     }
 }

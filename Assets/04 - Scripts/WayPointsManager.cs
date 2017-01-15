@@ -53,9 +53,9 @@ public class WayPointsManager : MonoBehaviour
             if (currentWayPoint == wayPointList.Length - 1)//Job finished, pass to another wayPointManager
             {
                 Initialize();
-                if (generatePathOnExit) MapGenerator.GetInstance().GeneratePath();
+                MapGenerator.GetInstance().GeneratePath();
                 GameManager.instance.ChangeWayPointManager();
-                pathModule.Destroy(1f);
+                pathModule.DestroyAll(1f);
             }
             else
             {

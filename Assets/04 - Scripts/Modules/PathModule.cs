@@ -124,6 +124,24 @@ public class PathModule : Module {
         return shuffledSideProps.Dequeue();
     }
 
+    public void DestroyAll(float delay = 0)
+    {
+        if (delay != 0)
+            StartCoroutine(DestroyAllWithDelay(delay));
+        else
+        {
+            Module[] modulesToDestroy = GetComponentsInChildren<Module>();
+            for (int i = 0; i < modulesToDestroy.Length; i++)
+                modulesToDestroy[i].Destroy();
+        }
+    }
+
+    IEnumerator DestroyAllWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        DestroyAll();
+    }
+
     protected void OnDrawGizmos()
     {
         DrawCross(envPoints_R);
