@@ -9,10 +9,10 @@ public class Character : MonoBehaviour {
     public PlayerStates playerState;
     private Controller3D controller;
     private CharacterAnimController charAnimCtrl;
-    private WayPointsManager wayPointsManager;
     private PlayerFrontColliderController frontColliderController;
     private PlayerSideColliderController sidesColliderController;
     private SwipeControls swipeLogic;
+    public WayPointsManager wayPointsManager { private get; set; }
 
     private Vector3 FCSizeRun, FCCenterRun;
     private Vector3 FCSizeSlide, FCCenterSlide;
@@ -45,7 +45,6 @@ public class Character : MonoBehaviour {
     {
         controller = GetComponent<Controller3D>();
         charAnimCtrl = GetComponent<CharacterAnimController>();
-        wayPointsManager = GetComponent<WayPointsManager>();
         playerState = new PlayerStates(transform.position.x, xMovement);
         swipeLogic = GetComponent<SwipeControls>();
 
@@ -55,8 +54,6 @@ public class Character : MonoBehaviour {
         jumpVelocity = Mathf.Abs(gravity) * timeToJumpApex;
 
         centralPathPosition = transform.position;
-
-        transform.position = wayPointsManager.GetTranslateAmount(transform, centralPathPosition).position;
     }
 
     private void Update()
@@ -70,6 +67,7 @@ public class Character : MonoBehaviour {
         transform.forward = simpleTrans.forwardVector;
         centralPathPosition = simpleTrans.position;
         transform.position = new Vector3(centralPathPosition.x, transform.position.y, centralPathPosition.z) + transform.right * xDisplacement;
+
         charAnimCtrl.PerformAction(yMoveAmount, fwdVelocity/maxFwdVelocity);
     }
 

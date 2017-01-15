@@ -143,10 +143,13 @@ public class MapGenerator : MonoBehaviour {
 
     public PathModule GenerateModule(Connection connection)
     {
+        //Game flow
         if (Application.isPlaying) GameManager.GetInstance().CheckForRestBlock();
-
+        
         if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
+
         PathModule newModulePrefab = shuffledModules.Dequeue();
+
         return newModulePrefab.Instantiate().GetComponent<PathModule>();
     }
 

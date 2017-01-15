@@ -5,31 +5,39 @@ public class WayPointsManager : MonoBehaviour
 {
 
     // put the points from unity interface
-    Transform[] wayPointList;
+    WayPoint[] wayPointList;
 
     int currentWayPoint = 0;
-    Transform targetWayPoint;
-    Transform previousTargetWayPoint;
+    WayPoint targetWayPoint;
+    WayPoint previousTargetWayPoint;
 
     [HideInInspector]
     public float speed = 4f, rotationSpeed = 1f;
 
-    public float distanceBetweenWayPoints;
+    float distanceBetweenWayPoints;
 
     private void Awake()
     {
-        targetWayPoint = FindObjectOfType<Character>().transform;
-        ChangeWayPointList();
+        wayPointList = GetComponentsInChildren<WayPoint>();
+        Initialize();
+    }
+
+    private void Initialize()
+    {
+        currentWayPoint = 0;
+        Debug.Log(transform.name);
+        previousTargetWayPoint = targetWayPoint = wayPointList[0];
+        distanceBetweenWayPoints = 1f;
     }
 
     public SimpleTransform GetTranslateAmount(Transform Tobject, Vector3 position)
     {
         SimpleTransform simpleTrans = new SimpleTransform();
-        float percent = Mathf.Clamp01(1 - Vector3.Distance(position, targetWayPoint.position) / distanceBetweenWayPoints);
-        simpleTrans.forwardVector = Vector3.Lerp(previousTargetWayPoint.forward, targetWayPoint.forward, percent);
+        float percent = Mathf.Clamp01(1 - Vector3.Distance(position, targetWayPoint.transform.position) / distanceBetweenWayPoints);
+        simpleTrans.forwardVector = Vector3.Lerp(previousTargetWayPoint.transform.forward, targetWayPoint.transform.forward, percent);
 
         // move towards the target
-        simpleTrans.position = Vector3.MoveTowards(position, targetWayPoint.position, speed * Time.deltaTime);
+        simpleTrans.position = Vector3.MoveTowards(position, targetWayPoint.transform.position, speed * Time.deltaTime);
 
         CheckForArrival(simpleTrans.position);
 
@@ -38,29 +46,23 @@ public class WayPointsManager : MonoBehaviour
 
     void CheckForArrival(Vector3 newPos)
     {        
-        if (newPos == targetWayPoint.position)
+        if (newPos == targetWayPoint.transform.position)
         {
-            if (currentWayPoint == wayPointList.Length - 1)
+            if (currentWayPoint == wayPointList.Length - 1)//Job finished, pass to another wayPointManager
             {
-                ChangeWayPointList();
-                currentWayPoint--;
+                Initialize();
+                GameManager.instance.ChangeWayPointManager();
             }
-
-            currentWayPoint++;
-            distanceBetweenWayPoints = Vector3.Distance(wayPointList[currentWayPoint].position, targetWayPoint.position);
-            previousTargetWayPoint = targetWayPoint;
-            targetWayPoint = wayPointList[currentWayPoint];
+            else
+            {
+                currentWayPoint++;
+                previousTargetWayPoint = targetWayPoint;
+                targetWayPoint = wayPointList[currentWayPoint];
+                distanceBetweenWayPoints = Vector3.Distance(previousTargetWayPoint.transform.position, targetWayPoint.transform.position);
+            }
         }
     }
 
-    void ChangeWayPointList()
-    {
-        wayPointList = FindObjectOfType<WayPoints>().wayPoints;
-        currentWayPoint = 0;
-        previousTargetWayPoint = targetWayPoint;
-        targetWayPoint = wayPointList[0];
-        distanceBetweenWayPoints = Vector3.Distance(previousTargetWayPoint.position, targetWayPoint.position);
-    }
 }
 
 public class SimpleTransform

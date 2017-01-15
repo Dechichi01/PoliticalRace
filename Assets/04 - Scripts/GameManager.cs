@@ -20,7 +20,10 @@ public class GameManager : MonoBehaviour {
 
     public GameState gameState = GameState.Setup;
 
+    Character player;
     MapGenerator mapGen;
+    [HideInInspector]
+    public Queue<WayPointsManager> wayPointsManagerQueue = new Queue<WayPointsManager>();
 
     //Singleton
     public static GameManager instance;
@@ -30,12 +33,14 @@ public class GameManager : MonoBehaviour {
     {
         instance = this;
         restPRD = new PRD(restProbability);
+        player = FindObjectOfType<Character>();
     }
 
     private void Start()
     {
         mapGen = MapGenerator.GetInstance();
         GenerateStartingPath();
+        player.wayPointsManager = wayPointsManagerQueue.Dequeue();
     }
 
     void GenerateStartingPath()
@@ -82,6 +87,11 @@ public class GameManager : MonoBehaviour {
             mapGen.SetModulesArray(modulesRest);
             gameState = GameState.Rest;
         }
+    }
+
+    public void ChangeWayPointManager()
+    {
+        player.wayPointsManager = wayPointsManagerQueue.Dequeue();
     }
 
     public enum GameState

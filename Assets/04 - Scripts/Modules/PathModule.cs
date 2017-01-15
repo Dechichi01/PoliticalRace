@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Utility;
 using System.Collections;
 
+[RequireComponent(typeof(WayPointsManager))]
 public class PathModule : Module {
 
     public Connection sideEnviromentConnection;
@@ -14,11 +15,20 @@ public class PathModule : Module {
     public GameObject natureSideRight, natureSideLeft;
     public GameObject roadSideRight, roadSideLeft;
 
+    WayPointsManager wayPointsManager;
     SideEnviroment[] sideProps;
     Queue<SideEnviroment> shuffledSideProps;
 
     [HideInInspector]
     public bool natureOnRight = false, natureOnLeft = false;
+
+    public override void Reuse(Vector3 position, Quaternion rotation)
+    {
+        base.Reuse(position, rotation);
+        if (wayPointsManager == null) wayPointsManager = GetComponent<WayPointsManager>();
+
+        GameManager.instance.wayPointsManagerQueue.Enqueue(wayPointsManager);
+    }
 
     public List<Connection> GetObstacleConnections()
     {

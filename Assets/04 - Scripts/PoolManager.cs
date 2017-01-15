@@ -54,7 +54,7 @@ public class PoolManager : MonoBehaviour
 
         if (poolDictionary.ContainsKey(poolKey))
         {
-            if (poolDictionary[poolKey].Count == 0)
+            if (poolDictionary[poolKey].Count == 0)//If there is no object in the pool, instantiate more
                 IncrementPool(prefab, poolKey, transform.FindChild(prefab.name + " Pool"), 2);
 
             PoolObject objectToReuse = poolDictionary[poolKey].Dequeue();
