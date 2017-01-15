@@ -9,21 +9,24 @@ public class WayPointsManager : MonoBehaviour
 
     int currentWayPoint = 0;
     Transform targetWayPoint;
+    Transform previousTargetWayPoint;
 
     [HideInInspector]
     public float speed = 4f, rotationSpeed = 1f;
 
-    // Use this for initialization
-    void Start()
+    public float distanceBetweenWayPoints;
+
+    private void Awake()
     {
+        targetWayPoint = FindObjectOfType<Character>().transform;
         ChangeWayPointList();
     }
 
     public SimpleTransform GetTranslateAmount(Transform Tobject, Vector3 position)
     {
         SimpleTransform simpleTrans = new SimpleTransform();
-        //simpleTrans.forwardVector = Vector3.Lerp(Tobject.forward, targetWayPoint.forward, 1 - Vector3.Distance(Tobject.position, targetWayPoint.position));
-        simpleTrans.forwardVector = Vector3.RotateTowards(Tobject.forward, targetWayPoint.position - position, 0.5f * Time.deltaTime, 0.0f);
+        float percent = Mathf.Clamp01(1 - Vector3.Distance(position, targetWayPoint.position) / distanceBetweenWayPoints);
+        simpleTrans.forwardVector = Vector3.Lerp(previousTargetWayPoint.forward, targetWayPoint.forward, percent);
 
         // move towards the target
         simpleTrans.position = Vector3.MoveTowards(position, targetWayPoint.position, speed * Time.deltaTime);
@@ -38,9 +41,14 @@ public class WayPointsManager : MonoBehaviour
         if (newPos == targetWayPoint.position)
         {
             if (currentWayPoint == wayPointList.Length - 1)
+            {
                 ChangeWayPointList();
+                currentWayPoint--;
+            }
 
             currentWayPoint++;
+            distanceBetweenWayPoints = Vector3.Distance(wayPointList[currentWayPoint].position, targetWayPoint.position);
+            previousTargetWayPoint = targetWayPoint;
             targetWayPoint = wayPointList[currentWayPoint];
         }
     }
@@ -49,7 +57,9 @@ public class WayPointsManager : MonoBehaviour
     {
         wayPointList = FindObjectOfType<WayPoints>().wayPoints;
         currentWayPoint = 0;
+        previousTargetWayPoint = targetWayPoint;
         targetWayPoint = wayPointList[0];
+        distanceBetweenWayPoints = Vector3.Distance(previousTargetWayPoint.position, targetWayPoint.position);
     }
 }
 

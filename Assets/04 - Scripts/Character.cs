@@ -55,6 +55,8 @@ public class Character : MonoBehaviour {
         jumpVelocity = Mathf.Abs(gravity) * timeToJumpApex;
 
         centralPathPosition = transform.position;
+
+        transform.position = wayPointsManager.GetTranslateAmount(transform, centralPathPosition).position;
     }
 
     private void Update()
@@ -67,8 +69,7 @@ public class Character : MonoBehaviour {
         SimpleTransform simpleTrans = wayPointsManager.GetTranslateAmount(transform, centralPathPosition);
         transform.forward = simpleTrans.forwardVector;
         centralPathPosition = simpleTrans.position;
-        centralPathPosition.y = transform.position.y;//NÃO ALTERA ISSO
-        transform.position = centralPathPosition + transform.right * xDisplacement;
+        transform.position = new Vector3(centralPathPosition.x, transform.position.y, centralPathPosition.z) + transform.right * xDisplacement;
         charAnimCtrl.PerformAction(yMoveAmount, fwdVelocity/maxFwdVelocity);
     }
 

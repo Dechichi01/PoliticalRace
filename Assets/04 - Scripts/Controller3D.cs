@@ -9,13 +9,11 @@ public class Controller3D : MonoBehaviour {
 
     public float skinWidth = 0.015f;
 
-    public float yGround;
-
     public void Move(float yMoveAmount)
     {
         collisions.Reset();
 
-        if (yMoveAmount <= 0)
+        if (yMoveAmount != 0)
             VerticalCollisions(ref yMoveAmount);
 
         transform.Translate(Vector3.up*yMoveAmount);
@@ -23,13 +21,17 @@ public class Controller3D : MonoBehaviour {
 
     void VerticalCollisions(ref float yMoveAmount)
     {
-        RaycastHit hit;
+        float directionY = Mathf.Sign(yMoveAmount);
+        float rayLength = Mathf.Abs(yMoveAmount) + skinWidth;
+        Vector3 rayOrigin = transform.position + Vector3.forward * 0.3f;
 
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Abs(yMoveAmount), collisionMask))
+        RaycastHit hit;
+        Debug.DrawRay(rayOrigin, Vector3.down * Mathf.Abs(yMoveAmount), Color.red);
+        if (Physics.Raycast(rayOrigin, Vector3.up*directionY, out hit, rayLength, collisionMask))
         {
-            collisions.below = true;
-            yMoveAmount = -(hit.distance - skinWidth);
-            yGround = hit.point.y + skinWidth;
+            if (hit.normal != Vector3.up) collisions.climbingSlope = true;
+            collisions.below = directionY == -1;
+            yMoveAmount = (hit.distance - skinWidth)*directionY;
         }
     }
     
@@ -37,10 +39,11 @@ public class Controller3D : MonoBehaviour {
     public struct CollisionInfo
     {
         public bool left, right, below;
+        public bool climbingSlope;
 
         public void Reset()
         {
-            left = right = below = false;
+            left = right = below = climbingSlope = false;
         }
     }
 }
