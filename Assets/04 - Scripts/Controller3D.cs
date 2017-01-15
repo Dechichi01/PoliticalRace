@@ -4,6 +4,7 @@ using System.Collections;
 [RequireComponent(typeof(Character))]
 public class Controller3D : MonoBehaviour {
 
+    public BoxCollider boxColl;
     public LayerMask collisionMask;
     public CollisionInfo collisions;
 
@@ -23,7 +24,7 @@ public class Controller3D : MonoBehaviour {
     {
         float directionY = Mathf.Sign(yMoveAmount);
         float rayLength = Mathf.Abs(yMoveAmount) + skinWidth;
-        Vector3 rayOrigin = transform.position + Vector3.forward * 0.3f;
+        Vector3 rayOrigin = boxColl.bounds.center + new Vector3(0f, -boxColl.bounds.extents.y, .3f);
 
         RaycastHit hit;
         Debug.DrawRay(rayOrigin, Vector3.down * Mathf.Abs(yMoveAmount), Color.red);

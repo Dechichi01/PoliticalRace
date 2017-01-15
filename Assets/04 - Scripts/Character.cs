@@ -14,10 +14,9 @@ public class Character : MonoBehaviour {
     private SwipeControls swipeLogic;
     public WayPointsManager wayPointsManager { private get; set; }
 
-    private Vector3 FCSizeRun, FCCenterRun;
-    private Vector3 FCSizeSlide, FCCenterSlide;
-    private Vector3 SCSizeRun, SCCenterRun;
-    private Vector3 SCSizeSlide, SCCenterSlide;
+    [HideInInspector]
+    public Vector3 FCSizeRun, FCCenterRun, FCSizeSlide, FCCenterSlide,
+        SCSizeRun, SCCenterRun, SCSizeSlide, SCCenterSlide;
 
     Vector3 centralPathPosition;
     float targetXDisplacement, xDisplacement = 0f;
@@ -57,16 +56,19 @@ public class Character : MonoBehaviour {
     }
 
     private void Update()
-    {
+    {                
         ProcessInput();
         ConsumeActionQueue();
         ProcessMovement();
 
-        wayPointsManager.speed = fwdVelocity;
-        SimpleTransform simpleTrans = wayPointsManager.GetTranslateAmount(transform, centralPathPosition);
-        transform.forward = simpleTrans.forwardVector;
-        centralPathPosition = simpleTrans.position;
-        transform.position = new Vector3(centralPathPosition.x, transform.position.y, centralPathPosition.z) + transform.right * xDisplacement;
+        if (!playerState.dead)
+        {
+            wayPointsManager.speed = fwdVelocity;
+            SimpleTransform simpleTrans = wayPointsManager.GetTranslateAmount(transform, centralPathPosition);
+            transform.forward = simpleTrans.forwardVector;
+            centralPathPosition = simpleTrans.position;
+            transform.position = new Vector3(centralPathPosition.x, transform.position.y, centralPathPosition.z) + transform.right * xDisplacement;
+        }
 
         charAnimCtrl.PerformAction(yMoveAmount, fwdVelocity/maxFwdVelocity);
     }
@@ -168,7 +170,8 @@ public class Character : MonoBehaviour {
             }
         }
 
-        yMoveAmount += gravity * Time.deltaTime * Time.deltaTime;
+        if (playerState.useGravity)
+            yMoveAmount += gravity * Time.deltaTime * Time.deltaTime;
 
         if (controller.collisions.below) yMoveAmount = -0.015f;
         playerState.isOnAir = !controller.collisions.below;
@@ -189,20 +192,28 @@ public class Character : MonoBehaviour {
             yMoveAmount += 1.5f*gravity * Time.deltaTime * Time.deltaTime;
             yield return null;
         }
-        SetBoxCollider_Slide();
+        //SetBoxCollider_Slide();
+    }
+
+    public void Die()
+    {
+        playerState.dead = true;
+        playerState.useGravity = false;
+        yMoveAmount = 0;
+        charAnimCtrl.Die();
     }
 
     private void SetBoxColliders()
     {
         FCCenterRun = frontCollider.center;
         FCSizeRun = frontCollider.size;
-        FCCenterSlide = new Vector3(frontCollider.center.x, 0.5f, frontCollider.center.z);
-        FCSizeSlide = new Vector3(frontCollider.size.x, 0.5f, frontCollider.size.z);
+        FCCenterSlide = new Vector3(frontCollider.center.x, 0.45f, frontCollider.center.z);
+        FCSizeSlide = new Vector3(frontCollider.size.x, 0.34f, frontCollider.size.z);
 
         SCCenterRun = sidesCollider.center;
         SCSizeRun = sidesCollider.size;
-        SCCenterSlide = new Vector3(sidesCollider.center.x, 0.5f, sidesCollider.center.z);
-        SCSizeSlide = new Vector3(sidesCollider.size.x, 0.5f, sidesCollider.size.z);
+        SCCenterSlide = new Vector3(sidesCollider.center.x, 0.45f, sidesCollider.center.z);
+        SCSizeSlide = new Vector3(sidesCollider.size.x, 0.34f, sidesCollider.size.z);
     }
 
     public void SetBoxCollider_Slide()
@@ -212,7 +223,6 @@ public class Character : MonoBehaviour {
 
         sidesCollider.size = SCSizeSlide;
         sidesCollider.center = SCCenterSlide;
-
     }
 
     //This should be called by the Slide animations after it finishes
@@ -230,7 +240,9 @@ public class Character : MonoBehaviour {
 [System.Serializable]
 public class PlayerStates
 {
+    public bool dead = false;
 
+    public bool useGravity = true;
     public bool canPerformActions = true;
     public bool canJump = true;
 
@@ -263,6 +275,7 @@ public class PlayerStates
 
     public void Copy(PlayerStates states)
     {
+        useGravity = states.useGravity;
         canPerformActions = states.canPerformActions;
         canJump = states.canJump;
         isMovingRight = states.isMovingRight;

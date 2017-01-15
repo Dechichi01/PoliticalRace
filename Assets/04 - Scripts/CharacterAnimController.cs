@@ -27,4 +27,10 @@ public class CharacterAnimController : MonoBehaviour {
         anim.SetTrigger("slide");
     }
 
+    public void Die()
+    {
+        anim.Play("Die", 0);
+        //anim.SetTrigger("die");
+    }
+
 }
