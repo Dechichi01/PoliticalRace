@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour {
 
-    private Player player;
+/*    private Player player;
     private Transform playerT;
 
     private float dodgeVelocity;
@@ -41,7 +41,7 @@ public class PlayerController : MonoBehaviour {
         {
             if (!playerState.IsExecutingAction() && !playerState.isOnAir)
             {
-                player.playerAnim.Play("run");
+                player.anim.Play("run");
             }
             playerT.Translate(Vector3.forward * fwdVelocity * Time.deltaTime);
         }
@@ -67,7 +67,7 @@ public class PlayerController : MonoBehaviour {
     }
 
 
-    public void ExecutePlayerAction(ref PlayerStates playerState, float targetPosition, Animation playerAnim)
+    public void ExecutePlayerAction(ref PlayerStates playerState, float targetPosition, Animator playerAnim)
     {
         if (playerState.isMovingRight)//Move right
         {
@@ -84,7 +84,6 @@ public class PlayerController : MonoBehaviour {
 
             if (Vector3.Dot(playerT.position,playerT.right) <= targetPosition)
             {
-                //playerT.position = new Vector3(targetPosition, playerT.position.y, playerT.position.z);
                 playerT.Translate(Vector3.right*(targetPosition - Vector3.Dot(playerT.position, playerT.right)));
                 playerState.isMovingLeft = false;
             }
@@ -135,7 +134,7 @@ public class PlayerController : MonoBehaviour {
     IEnumerator PerformPunchAttack()
     {
         isPerformingAttack = true;
-        player.playerAnim.Stop();
+        player.anim.Stop();
         while (true)
         {
             if (!player.playerState.isPunchAttacking)
@@ -169,7 +168,7 @@ public class PlayerController : MonoBehaviour {
     IEnumerator PerformDownHillAttack()
     {
         isPerformingAttack = true;
-        player.playerAnim.Stop();
+        player.anim.Stop();
         while (true)
         {
             if (!player.playerState.isDownHillAttacking)
@@ -185,7 +184,7 @@ public class PlayerController : MonoBehaviour {
     IEnumerator PerformUpHillAttack()
     {
         isPerformingAttack = true;
-        player.playerAnim.Stop();
+        player.anim.Stop();
         while (true)
         {
             if (!player.playerState.isUpHillAttacking)
@@ -249,5 +248,5 @@ public class PlayerController : MonoBehaviour {
             yield return new WaitForFixedUpdate();
         }
     }
-
+*/
 }

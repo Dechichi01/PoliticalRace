@@ -25,10 +25,21 @@ public class PoolObject : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public virtual void Destroy()
+    public virtual void Destroy(float delay = 0)
     {
-        gameObject.SetActive(false);
-        PoolManager.instance.poolDictionary[poolKey].Enqueue(this);
-        transform.parent = poolHolder;
+        if (delay != 0)
+            StartCoroutine(DestroyWithDelay(delay));
+        else
+        {
+            gameObject.SetActive(false);
+            PoolManager.instance.poolDictionary[poolKey].Enqueue(this);
+            transform.parent = poolHolder;
+        }
+    }
+
+    IEnumerator DestroyWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Destroy();
     }
 }

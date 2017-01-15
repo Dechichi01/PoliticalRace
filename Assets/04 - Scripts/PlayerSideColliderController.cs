@@ -3,6 +3,7 @@ using System.Collections;
 
 public class PlayerSideColliderController : MonoBehaviour {
 
+    /*
     private BoxCollider boxCollider;
     private Player player;
     private Transform playerT;
@@ -58,5 +59,5 @@ public class PlayerSideColliderController : MonoBehaviour {
             }
             yield return new WaitForFixedUpdate();
         }
-    }
+    }*/
 }

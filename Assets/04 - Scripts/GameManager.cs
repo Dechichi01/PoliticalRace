@@ -5,22 +5,21 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
-    public PathModule[] modulesWarmUp;
-    public PathModule[] modulesCalibrate;
-    public PathModule[] modulesReward;
-    public PathModule[] modulesChallenges;
-    public PathModule[] modulesRest;
+    public ModulesPerState[] modulesPerState;
 
     [Range(0, 1)]
     public float restProbability = 0.1f;
     public int numberOfRestBlocks = 2;
 
     PRD restPRD;
-    int restBlocksCounter = 0;
+    int blocksGeneratedInState = 0;
 
-    public GameState gameState = GameState.Setup;
+    public GameState gameState = GameState.WarmUp;
 
+    Character player;
     MapGenerator mapGen;
+    [HideInInspector]
+    public Queue<WayPointsManager> wayPointsManagerQueue = new Queue<WayPointsManager>();
 
     //Singleton
     public static GameManager instance;
@@ -30,62 +29,91 @@ public class GameManager : MonoBehaviour {
     {
         instance = this;
         restPRD = new PRD(restProbability);
+        player = FindObjectOfType<Character>();
     }
 
     private void Start()
     {
         mapGen = MapGenerator.GetInstance();
         GenerateStartingPath();
+        player.wayPointsManager = wayPointsManagerQueue.Dequeue();
     }
 
     void GenerateStartingPath()
     {
+        SetGameState(GameState.WarmUp);
         mapGen.iterations = 1;
-        mapGen.SetModulesArray(modulesWarmUp);
-
         mapGen.GenerateMap();
 
+        SetGameState(GameState.Calibrate);
         mapGen.iterations = 3;
-        mapGen.SetModulesArray(modulesCalibrate);
+        mapGen.GeneratePath();
 
-        mapGen.GeneratePath(true);
-
-        mapGen.SetModulesArray(modulesReward);
-        mapGen.GeneratePath(true);
-
-        mapGen.iterations = 5;
-        mapGen.SetModulesArray(modulesChallenges);
-        mapGen.GeneratePath(true);
-
-        gameState = GameState.Challenges;
+        SetGameState(GameState.Reward);
+        mapGen.iterations = 1;
+        mapGen.GeneratePath();
     }
 
     /*
     * Randonly change to RestBlocks based on a Pseudo Random Distribution
     * change back after the number of rest blocks was instantiated
     */
-    public void CheckForRestBlock()
+    public void CheckGameState()
     {
-        if (gameState == GameState.Rest)
+        blocksGeneratedInState++;
+        switch(gameState)
         {
-            restBlocksCounter++;
-            if (restBlocksCounter >= numberOfRestBlocks)
-            {
-                restBlocksCounter = 0;
-                gameState = GameState.Challenges;
-                mapGen.SetModulesArray(modulesChallenges);
-            }
+            case (GameState.WarmUp):
+                break;
+            case (GameState.Calibrate):
+                break;
+            case (GameState.Reward):
+                if (blocksGeneratedInState >= 3)
+                {
+                    SetGameState(GameState.Challenges);
+                }
+                break;
+            case (GameState.Challenges):
+                if (restPRD.GetProbability() > Random.value)
+                {
+                    restPRD.ResetTries();
+                    SetGameState(GameState.Rest);
+                }
+                break;
+            case (GameState.Rest):
+                if (blocksGeneratedInState >= numberOfRestBlocks)
+                {
+                    SetGameState(GameState.Challenges);
+                }
+                break;
         }
-        else if (gameState == GameState.Challenges && restPRD.GetProbability() > Random.value)
+    }
+
+    void SetGameState(GameState state)
+    {
+        gameState = state;
+        blocksGeneratedInState = 0;
+
+        for (int i = 0; i < modulesPerState.Length; i++)
         {
-            restPRD.ResetTries();
-            mapGen.SetModulesArray(modulesRest);
-            gameState = GameState.Rest;
+            if (modulesPerState[i].state == gameState) mapGen.SetModulesArray(modulesPerState[i].modules);
         }
+    }
+
+    public void ChangeWayPointManager()
+    {
+        player.wayPointsManager = wayPointsManagerQueue.Dequeue();
     }
 
     public enum GameState
     {
-        Setup, Challenges, Rest
+        WarmUp = 0, Calibrate = 1, Reward = 2, Challenges = 3, Rest = 4
+    }
+
+    [System.Serializable]
+    public struct ModulesPerState
+    {
+        public GameState state;
+        public PathModule[] modules;
     }
 }

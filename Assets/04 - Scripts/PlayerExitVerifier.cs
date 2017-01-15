@@ -10,7 +10,7 @@ public class PlayerExitVerifier : MonoBehaviour {
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Playdfer"))
         {
             pathModule.Destroy();
             if (generatePath) MapGenerator.GetInstance().GeneratePath();

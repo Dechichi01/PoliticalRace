@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using Utility;
 using System.Collections;
 
+[RequireComponent(typeof(WayPointsManager))]
 public class PathModule : Module {
 
     public Connection sideEnviromentConnection;
-    public PlayerExitVerifier playerExitVerifier;
 
     public Vector3[] envPoints_R, envPoints_L;
 
@@ -14,11 +14,25 @@ public class PathModule : Module {
     public GameObject natureSideRight, natureSideLeft;
     public GameObject roadSideRight, roadSideLeft;
 
+    [HideInInspector]
+    public WayPointsManager wayPointsManager;
     SideEnviroment[] sideProps;
     Queue<SideEnviroment> shuffledSideProps;
 
     [HideInInspector]
     public bool natureOnRight = false, natureOnLeft = false;
+
+    public override void Reuse(Vector3 position, Quaternion rotation)
+    {
+        base.Reuse(position, rotation);
+        if (wayPointsManager == null)
+        {
+            wayPointsManager = GetComponent<WayPointsManager>();
+            wayPointsManager.pathModule = this;
+        }
+
+        GameManager.instance.wayPointsManagerQueue.Enqueue(wayPointsManager);
+    }
 
     public List<Connection> GetObstacleConnections()
     {
@@ -36,7 +50,6 @@ public class PathModule : Module {
 
     public void GenerateObstacles(MapGenerator mapGen)
     {
-        playerExitVerifier.pathModule = this;
         List<Connection> obstacleConnections = GetObstacleConnections();
 
         foreach (Connection connection in obstacleConnections)
@@ -109,6 +122,24 @@ public class PathModule : Module {
     {
         if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
         return shuffledSideProps.Dequeue();
+    }
+
+    public void DestroyAll(float delay = 0)
+    {
+        if (delay != 0)
+            StartCoroutine(DestroyAllWithDelay(delay));
+        else
+        {
+            Module[] modulesToDestroy = GetComponentsInChildren<Module>();
+            for (int i = 0; i < modulesToDestroy.Length; i++)
+                modulesToDestroy[i].Destroy();
+        }
+    }
+
+    IEnumerator DestroyAllWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        DestroyAll();
     }
 
     protected void OnDrawGizmos()

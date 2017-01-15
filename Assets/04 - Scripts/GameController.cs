@@ -11,11 +11,19 @@ public class GameController : MonoBehaviour {
         Death
     }
 
+    private static GameController _instance;
+    public static GameController instance { get { return _instance; } }
+
+    private void Awake()
+    {
+        _instance = this;
+    }
+
     private GameState gameState;
     
 	// Use this for initialization
 	void Start () {
-        gameState = GameState.Entrance;	
+        gameState = GameState.Running;	
 	}
 
     public GameState GetGameState() { return gameState; }

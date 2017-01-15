@@ -12,13 +12,12 @@ public class MapGenerator : MonoBehaviour {
     public int seed;
 
     System.Random prng;
-    //Controlled by GameManager
-    PathModule[] modules;
+
+    PathModule[] modules;//Controlled by GameManager
     Queue<PathModule> shuffledModules;
     public bool natureOnLeft = false, natureOnRight = false;
     PRD prdNatLeft, prdNatRight;
 
-    List<PathModule> instantiedModules = new List<PathModule>();//used to get the last module and delete previous when in Game
     PathModule moduleVerifier;//module that will trigger new instantiations when player passes on
     PathModule lastModule;
     Transform generatedMap;//Holder for the path created
@@ -45,7 +44,7 @@ public class MapGenerator : MonoBehaviour {
         prdNatRight = new PRD(.5f);
         RandomChangeSideEnvVariables();
 
-        modules = FindObjectOfType<GameManager>().modulesWarmUp;
+        modules = FindObjectOfType<GameManager>().modulesPerState[0].modules;
         ResetShuffledModulesQueue();
 
         //Create map holder and first module
@@ -59,8 +58,7 @@ public class MapGenerator : MonoBehaviour {
         PathModule startingModule = startModule.Instantiate(transform.position, transform.rotation).GetComponent<PathModule>();
         startingModule.transform.parent = generatedMap;
 
-        instantiedModules.Clear();
-        instantiedModules.Add(startingModule);
+        lastModule = startingModule;
         moduleVerifier = startingModule;
         startingModule.natureOnRight = natureOnRight;
         startingModule.natureOnLeft = natureOnLeft;
@@ -68,27 +66,10 @@ public class MapGenerator : MonoBehaviour {
         GeneratePath();
     }
 
-    public void GeneratePath(bool setup = false)
+    public void GeneratePath()
     {
-        //Destroy past modules
-        List<Module> modulesToDeactivate = new List<Module>();  
-        if (!setup)
-        {
-            while (instantiedModules.Count > 4)
-            {
-                modulesToDeactivate.AddRange(instantiedModules[0].GetComponentsInChildren<Module>());
-                instantiedModules.RemoveAt(0);
-            }
-        }
-
-        for (int i = 0; i < modulesToDeactivate.Count; i++)
-            modulesToDeactivate[i].Destroy();
-        //
-
-        moduleVerifier.playerExitVerifier.generatePath = false;
-
-        List<Connection> pendingConnections = instantiedModules[instantiedModules.Count - 1].GetEntranceAndExit();
-        pendingConnections.RemoveAll(c => (c is Entrance));//Don't connect to the entrance of the first module
+        List<Connection> pendingConnections = lastModule.GetEntranceAndExit();
+        pendingConnections.RemoveAll(c => (c is Entrance));//Don't connect to the entrance of the last module
 
         for (int i = 0; i < iterations; i++)
         {
@@ -99,7 +80,7 @@ public class MapGenerator : MonoBehaviour {
                 //Generate a module and it's obstacles
                 PathModule newModule = GenerateModule(connection);
                 if (i < 0.6 * iterations) moduleVerifier = newModule;
-                instantiedModules.Add(newModule);
+                lastModule = newModule;
 
                 //Random change in side enviroment (road/nature) if module is a turn
                 if (newModule is TurnLeftModule || newModule is TurnRightModule) RandomChangeSideEnvVariables();
@@ -119,8 +100,6 @@ public class MapGenerator : MonoBehaviour {
 
             pendingConnections = newConnections;
         }
-
-        moduleVerifier.playerExitVerifier.generatePath = true;
     }
 
     public void SetModulesArray(PathModule[] newModules)
@@ -143,10 +122,13 @@ public class MapGenerator : MonoBehaviour {
 
     public PathModule GenerateModule(Connection connection)
     {
-        if (Application.isPlaying) GameManager.GetInstance().CheckForRestBlock();
+        //Game flow
+        if (Application.isPlaying) GameManager.GetInstance().CheckGameState();
 
         if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
+
         PathModule newModulePrefab = shuffledModules.Dequeue();
+
         return newModulePrefab.Instantiate().GetComponent<PathModule>();
     }
 
