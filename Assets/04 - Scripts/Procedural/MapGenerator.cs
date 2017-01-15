@@ -7,7 +7,7 @@ public class MapGenerator : MonoBehaviour {
 
     //Assigned in the inspector
     public PathModule startModule;
-    public Module[] obstacles;
+    public PlaceableItem[] obstacles;
     public PlaceableItem[] pickUps;
     public int iterations = 5;
     public int seed;
@@ -114,11 +114,11 @@ public class MapGenerator : MonoBehaviour {
         shuffledModules = new Queue<PathModule>(Randomness.ShuffledArray(modules, prng));
     }
 
-    public Module GenerateObstacle(Connection connection)
+    public PlaceableItem GenerateObstacle(Connection connection)
     {
         string newTag = connection.GetRandomConnectTag();
         Module newModulePrefab = GetRandomWithTag(obstacles, newTag);
-        return newModulePrefab.Instantiate().GetComponent<Module>();
+        return newModulePrefab.Instantiate().GetComponent<PlaceableItem>();
     }
 
     public PlaceableItem GeneratePickup(Connection connection)

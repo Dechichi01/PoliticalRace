@@ -10,7 +10,7 @@ public class SlideState : StateMachineBehaviour {
 	override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
         player = animator.GetComponentInParent<Character>();
         startSlide = new RangeFloat(0f, .24f);
-        finishSlide = new RangeFloat(.46f, .8f);
+        finishSlide = new RangeFloat(.46f, 1f);
 	}
 
 	// OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks

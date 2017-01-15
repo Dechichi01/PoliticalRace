@@ -61,7 +61,8 @@ public class PathModule : Module {
         foreach (Connection connection in obstacleConnections)
         {
             //Get a random tag of a object this connection can connect to
-            Module newModule = mapGen.GenerateObstacle(connection);
+            PlaceableItem newModule = mapGen.GenerateObstacle(connection);
+            newModule.Initialize();
             List<Connection> newModuleConnections = newModule.GetConnections();
             mapGen.MatchConnections(connection, newModuleConnections[0]);
             newModule.transform.parent = transform;

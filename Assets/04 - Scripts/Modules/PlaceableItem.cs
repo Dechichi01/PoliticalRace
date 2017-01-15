@@ -6,7 +6,7 @@ public class PlaceableItem : Module {
     [Range(0,1)]
     public float minDistFactor = 0.2f, maxDistFactor = 0.35f;
 
-    Connection exit;
+    public Connection exit;
 
     public void Initialize()
     {
