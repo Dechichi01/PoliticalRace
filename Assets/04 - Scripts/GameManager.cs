@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviour {
     void GenerateStartingPath()
     {
         SetGameState(GameState.WarmUp);
-        mapGen.iterations = 2;
+        mapGen.iterations = 1;
         mapGen.GenerateMap();
 
         SetGameState(GameState.Calibrate);
