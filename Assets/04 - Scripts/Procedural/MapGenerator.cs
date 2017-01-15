@@ -44,7 +44,7 @@ public class MapGenerator : MonoBehaviour {
         prdNatRight = new PRD(.5f);
         RandomChangeSideEnvVariables();
 
-        modules = FindObjectOfType<GameManager>().modulesWarmUp;
+        modules = FindObjectOfType<GameManager>().modulesPerState[0].modules;
         ResetShuffledModulesQueue();
 
         //Create map holder and first module
@@ -123,9 +123,8 @@ public class MapGenerator : MonoBehaviour {
     public PathModule GenerateModule(Connection connection)
     {
         //Game flow
-        if (Application.isPlaying) GameManager.GetInstance().CheckForRestBlock();
+        if (Application.isPlaying) GameManager.GetInstance().CheckGameState();
 
-        GameManager.instance.blocksGeneratedInState++;
         if (shuffledModules.Count == 0) ResetShuffledModulesQueue();
 
         PathModule newModulePrefab = shuffledModules.Dequeue();
