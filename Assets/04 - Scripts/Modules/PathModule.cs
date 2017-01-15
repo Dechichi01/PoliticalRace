@@ -7,7 +7,6 @@ using System.Collections;
 public class PathModule : Module {
 
     public Connection sideEnviromentConnection;
-    public PlayerExitVerifier playerExitVerifier;
 
     public Vector3[] envPoints_R, envPoints_L;
 
@@ -15,7 +14,8 @@ public class PathModule : Module {
     public GameObject natureSideRight, natureSideLeft;
     public GameObject roadSideRight, roadSideLeft;
 
-    WayPointsManager wayPointsManager;
+    [HideInInspector]
+    public WayPointsManager wayPointsManager;
     SideEnviroment[] sideProps;
     Queue<SideEnviroment> shuffledSideProps;
 
@@ -25,7 +25,11 @@ public class PathModule : Module {
     public override void Reuse(Vector3 position, Quaternion rotation)
     {
         base.Reuse(position, rotation);
-        if (wayPointsManager == null) wayPointsManager = GetComponent<WayPointsManager>();
+        if (wayPointsManager == null)
+        {
+            wayPointsManager = GetComponent<WayPointsManager>();
+            wayPointsManager.pathModule = this;
+        }
 
         GameManager.instance.wayPointsManagerQueue.Enqueue(wayPointsManager);
     }
@@ -46,7 +50,6 @@ public class PathModule : Module {
 
     public void GenerateObstacles(MapGenerator mapGen)
     {
-        playerExitVerifier.pathModule = this;
         List<Connection> obstacleConnections = GetObstacleConnections();
 
         foreach (Connection connection in obstacleConnections)

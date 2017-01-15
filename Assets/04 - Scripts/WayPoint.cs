@@ -3,7 +3,7 @@ using System.Collections;
 
 public class WayPoint : MonoBehaviour {
 
-    protected void OnDrawGizmos()
+    protected void OnDrawGizmosSelected()
     {
         var scale = 5.0f;
 

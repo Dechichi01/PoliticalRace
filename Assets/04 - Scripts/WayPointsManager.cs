@@ -3,7 +3,6 @@ using System.Collections;
 
 public class WayPointsManager : MonoBehaviour
 {
-
     // put the points from unity interface
     WayPoint[] wayPointList;
 
@@ -16,6 +15,10 @@ public class WayPointsManager : MonoBehaviour
 
     float distanceBetweenWayPoints;
 
+    [HideInInspector]
+    public bool generatePathOnExit = false;
+    public PathModule pathModule { private get; set; }
+
     private void Awake()
     {
         wayPointList = GetComponentsInChildren<WayPoint>();
@@ -25,7 +28,6 @@ public class WayPointsManager : MonoBehaviour
     private void Initialize()
     {
         currentWayPoint = 0;
-        Debug.Log(transform.name);
         previousTargetWayPoint = targetWayPoint = wayPointList[0];
         distanceBetweenWayPoints = 1f;
     }
@@ -51,7 +53,9 @@ public class WayPointsManager : MonoBehaviour
             if (currentWayPoint == wayPointList.Length - 1)//Job finished, pass to another wayPointManager
             {
                 Initialize();
+                if (generatePathOnExit) MapGenerator.GetInstance().GeneratePath();
                 GameManager.instance.ChangeWayPointManager();
+                pathModule.Destroy(1f);
             }
             else
             {
