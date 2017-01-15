@@ -16,8 +16,8 @@ public class GameManager : MonoBehaviour {
 
     public ModulesPerState[] modulesPerState;
 
-    public SideEnviroment[] roadSideProps;
-    public SideEnviroment[] natureSideProps;
+    public PlaceableItem[] roadSideProps;
+    public PlaceableItem[] natureSideProps;
 
     Character player;
     MapGenerator mapGen;

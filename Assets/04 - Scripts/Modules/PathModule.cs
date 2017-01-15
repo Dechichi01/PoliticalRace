@@ -15,8 +15,8 @@ public class PathModule : Module {
 
     [HideInInspector]
     public WayPointsManager wayPointsManager;
-    SideEnviroment[] sideProps;
-    Queue<SideEnviroment> shuffledSideProps;
+    PlaceableItem[] sideProps;
+    Queue<PlaceableItem> shuffledSideProps;
 
     [HideInInspector]
     public bool natureOnRight = false, natureOnLeft = false;
@@ -37,6 +37,13 @@ public class PathModule : Module {
     {
         List<Connection> connections = new List<Connection>(GetComponentsInChildren<Connection>());
         connections.RemoveAll(c => !(c is ObstacleConnection));
+        return connections;
+    }
+
+    public List<Connection> GetPickupConnections()
+    {
+        List<Connection> connections = new List<Connection>(GetComponentsInChildren<Connection>());
+        connections.RemoveAll(c => !(c is PickUpConnection));
         return connections;
     }
 
@@ -61,6 +68,22 @@ public class PathModule : Module {
         }
 
         GenerateSideEnviroment(mapGen);
+        GeneratePickups(mapGen);
+    }
+
+    public void GeneratePickups(MapGenerator mapGen)
+    {
+        List<Connection> pickupConnections = GetPickupConnections();
+
+        foreach (Connection connection in pickupConnections)
+        {
+            //Get a random tag of a object this connection can connect to
+            PlaceableItem newModule = mapGen.GeneratePickup(connection);
+            newModule.Initialize();
+            List<Connection> newModuleConnections = newModule.GetConnections();
+            mapGen.MatchConnections(connection, newModuleConnections[0]);
+            newModule.transform.parent = transform;
+        }
     }
 
     protected void GenerateSideEnviroment(MapGenerator mapGen)
@@ -73,7 +96,7 @@ public class PathModule : Module {
         //
 
         sideProps = natureOnRight ? GameManager.instance.natureSideProps : GameManager.instance.roadSideProps;
-        shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
+        shuffledSideProps = new Queue<PlaceableItem>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
         for (int i = 0; i < envPoints_R.Length - 1; i++)
         {
@@ -86,7 +109,7 @@ public class PathModule : Module {
 
         //Generate left side
         sideProps = natureOnLeft ? GameManager.instance.natureSideProps : GameManager.instance.roadSideProps;
-        shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
+        shuffledSideProps = new Queue<PlaceableItem>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
         sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
 
@@ -106,7 +129,7 @@ public class PathModule : Module {
     {
         while (Vector3.Dot(currentPos,incrementDir) < Vector3.Dot(endPos,incrementDir))
         {
-            SideEnviroment currentProp = GetModuleFromQueue().Instantiate().GetComponent<SideEnviroment>();
+            PlaceableItem currentProp = GetModuleFromQueue().Instantiate().GetComponent<PlaceableItem>();
             currentProp.Initialize();
             sideEnviromentConnection.transform.position = currentPos;
             mapGen.MatchConnections(sideEnviromentConnection, currentProp.GetConnections()[0]);
@@ -118,9 +141,9 @@ public class PathModule : Module {
         }
     }
 
-    protected SideEnviroment GetModuleFromQueue()
+    protected PlaceableItem GetModuleFromQueue()
     {
-        if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
+        if (shuffledSideProps.Count == 0) shuffledSideProps = new Queue<PlaceableItem>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
         return shuffledSideProps.Dequeue();
     }
 

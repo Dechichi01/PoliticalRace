@@ -3,7 +3,7 @@ using System.Collections;
 
 [RequireComponent (typeof(BoxCollider))]
 [RequireComponent (typeof(Rigidbody))]
-public abstract class Pickup : Module {
+public abstract class Pickup : PlaceableItem {
 
     private void Update()
     {

@@ -8,6 +8,7 @@ public class MapGenerator : MonoBehaviour {
     //Assigned in the inspector
     public PathModule startModule;
     public Module[] obstacles;
+    public PlaceableItem[] pickUps;
     public int iterations = 5;
     public int seed;
 
@@ -118,6 +119,13 @@ public class MapGenerator : MonoBehaviour {
         string newTag = connection.GetRandomConnectTag();
         Module newModulePrefab = GetRandomWithTag(obstacles, newTag);
         return newModulePrefab.Instantiate().GetComponent<Module>();
+    }
+
+    public PlaceableItem GeneratePickup(Connection connection)
+    {
+        string newTag = connection.GetRandomConnectTag();
+        PlaceableItem newModulePrefab = pickUps[0];
+        return newModulePrefab.Instantiate().GetComponent<PlaceableItem>();
     }
 
     public PathModule GenerateModule(Connection connection)
