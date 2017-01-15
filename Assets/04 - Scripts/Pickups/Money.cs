@@ -3,9 +3,10 @@ using System.Collections;
 
 public class Money : Pickup {
 
-	void OnTriggerEnter(Collider collider)
+	void OnTriggerEnter(Collider other)
     {
-        Destroy(gameObject);
+        if (other.CompareTag("Player"))
+            Destroy(gameObject);
     }
 
 }

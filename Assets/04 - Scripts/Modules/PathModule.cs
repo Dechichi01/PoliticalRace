@@ -10,7 +10,6 @@ public class PathModule : Module {
 
     public Vector3[] envPoints_R, envPoints_L;
 
-    public SideEnviroment[] natureSideProps, roadSideProps;
     public GameObject natureSideRight, natureSideLeft;
     public GameObject roadSideRight, roadSideLeft;
 
@@ -73,7 +72,7 @@ public class PathModule : Module {
         roadSideLeft.SetActive(!natureOnLeft);
         //
 
-        sideProps = natureOnRight ? natureSideProps : roadSideProps;
+        sideProps = natureOnRight ? GameManager.instance.natureSideProps : GameManager.instance.roadSideProps;
         shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
         for (int i = 0; i < envPoints_R.Length - 1; i++)
@@ -86,7 +85,7 @@ public class PathModule : Module {
         }
 
         //Generate left side
-        sideProps = natureOnLeft ? natureSideProps : roadSideProps;
+        sideProps = natureOnLeft ? GameManager.instance.natureSideProps : GameManager.instance.roadSideProps;
         shuffledSideProps = new Queue<SideEnviroment>(Randomness.ShuffledArray(sideProps, Random.Range(0, 5000)));
 
         sideEnviromentConnection.transform.Rotate(Vector3.up * 180f);
@@ -108,6 +107,7 @@ public class PathModule : Module {
         while (Vector3.Dot(currentPos,incrementDir) < Vector3.Dot(endPos,incrementDir))
         {
             SideEnviroment currentProp = GetModuleFromQueue().Instantiate().GetComponent<SideEnviroment>();
+            currentProp.Initialize();
             sideEnviromentConnection.transform.position = currentPos;
             mapGen.MatchConnections(sideEnviromentConnection, currentProp.GetConnections()[0]);
             currentProp.transform.parent = transform;

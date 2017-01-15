@@ -5,8 +5,6 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
-    public ModulesPerState[] modulesPerState;
-
     [Range(0, 1)]
     public float restProbability = 0.1f;
     public int numberOfRestBlocks = 2;
@@ -15,6 +13,11 @@ public class GameManager : MonoBehaviour {
     int blocksGeneratedInState = 0;
 
     public GameState gameState = GameState.WarmUp;
+
+    public ModulesPerState[] modulesPerState;
+
+    public SideEnviroment[] roadSideProps;
+    public SideEnviroment[] natureSideProps;
 
     Character player;
     MapGenerator mapGen;
@@ -42,7 +45,7 @@ public class GameManager : MonoBehaviour {
     void GenerateStartingPath()
     {
         SetGameState(GameState.WarmUp);
-        mapGen.iterations = 1;
+        mapGen.iterations = 2;
         mapGen.GenerateMap();
 
         SetGameState(GameState.Calibrate);
