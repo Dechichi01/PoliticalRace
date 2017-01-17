@@ -84,7 +84,7 @@ public class MapGenerator : MonoBehaviour {
                 lastModule = newModule;
 
                 //Random change in side enviroment (road/nature) if module is a turn
-                if (newModule is TurnLeftModule || newModule is TurnRightModule) RandomChangeSideEnvVariables();
+                if (newModule.CompareTag("TurnLeft") || newModule.CompareTag("TurnRight")) RandomChangeSideEnvVariables();
                 newModule.natureOnLeft = natureOnLeft;
                 newModule.natureOnRight = natureOnRight;
 
